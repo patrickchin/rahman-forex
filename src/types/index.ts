@@ -61,3 +61,21 @@ export interface MarketStats {
   bestOpportunity: ArbitrageOpportunity | null;
   lastUpdate: number;
 }
+
+export interface AmountTier {
+  amount: number;
+  label: string;
+}
+
+export const AMOUNT_TIERS: AmountTier[] = [
+  { amount: 1000, label: '1K' },
+  { amount: 5000, label: '5K' },
+  { amount: 10000, label: '10K' },
+  { amount: 50000, label: '50K' },
+  { amount: 100000, label: '100K' },
+  { amount: 500000, label: '500K' }
+];
+
+export const SUPPORTED_CURRENCIES = ['NGN', 'CNY', 'USD', 'EUR', 'GBP', 'INR'];
+export const INTERMEDIARY_CURRENCIES = ['USDT', 'USDC', 'BUSD'];
+export const PAYMENT_METHODS = ['Bank Transfer', 'Alipay', 'WeChat Pay', 'PayPal', 'Wise', 'Revolut'];
