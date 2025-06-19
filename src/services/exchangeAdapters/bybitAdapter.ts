@@ -10,28 +10,32 @@ class BybitAdapter implements ExchangeAdapter {
   async fetchP2POrders(asset: string, fiat: string, side: 'BUY' | 'SELL'): Promise<P2POrder[]> {
     try {
       await this.enforceRateLimit();
-      
-      const response = await axios.get(this.baseUrl, {
-        params: {
-          userId: '',
-          tokenId: asset,
-          currencyId: fiat,
-          payment: '',
-          side: side === 'BUY' ? '1' : '0',
-          size: '20',
-          page: '1',
-          amount: ''
-        },
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        timeout: 10000
-      });
-
+      const payload = {
+        userId: '',
+        tokenId: asset,
+        currencyId: fiat,
+        payment: [],
+        side: side === 'BUY' ? '1' : '0',
+        size: '20',
+        page: '1',
+        amount: '',
+        vaMaker: false,
+        bulkMaker: false,
+        canTrade: true,
+        verificationFilter: 0,
+        sortType: 'TRADE_PRICE',
+        paymentPeriod: [],
+        itemRegion: 1
+      };
+      const headers = {
+        'accept': 'application/json',
+        'content-type': 'application/json;charset=UTF-8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      };
+      const response = await axios.post(this.baseUrl, payload, { headers, timeout: 10000 });
       if (response.data?.result?.items) {
         return response.data.result.items.map((order: any) => this.transformOrder(order, asset, fiat));
       }
-      
       return [];
     } catch (error) {
       console.error(`Bybit API error for ${asset}/${fiat} ${side}:`, error);
@@ -42,11 +46,9 @@ class BybitAdapter implements ExchangeAdapter {
   private async enforceRateLimit(): Promise<void> {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
-    
     if (timeSinceLastRequest < this.rateLimitDelay) {
       await new Promise(resolve => setTimeout(resolve, this.rateLimitDelay - timeSinceLastRequest));
     }
-    
     this.lastRequestTime = Date.now();
   }
 
