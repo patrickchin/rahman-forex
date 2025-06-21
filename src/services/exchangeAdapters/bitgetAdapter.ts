@@ -19,7 +19,16 @@ const bitgetAdapter: ExchangeAdapter = {
         'Accept': 'application/json, text/plain, */*',
         'Content-Type': 'application/json;charset=utf-8',
       };
-      const response = await axios.post(BITGET_API_URL, payload, { headers, timeout: 10000 });
+      const response = await axios.post(
+        'http://localhost:4000/proxy',
+        {
+          url: BITGET_API_URL,
+          method: 'POST',
+          data: payload,
+          headers
+        },
+        { timeout: 10000 }
+      );
       if (response.data?.data?.dataList) {
         return response.data.data.dataList.map((order: any) => transformOrder(order, asset, fiat, side));
       }
@@ -29,9 +38,6 @@ const bitgetAdapter: ExchangeAdapter = {
       return [];
     }
   },
-  isAvailable() {
-    return true;
-  }
 };
 
 function transformOrder(order: any, asset: string, fiat: string, side: 'BUY' | 'SELL'): P2POrder {

@@ -1,8 +1,9 @@
 import BinanceAdapter from '../binanceAdapter';
 import { P2POrder } from '../../../types';
+import binanceAdapter from '../binanceAdapter';
 
 describe('BinanceAdapter', () => {
-  const adapter = new BinanceAdapter();
+  const adapter = binanceAdapter;
 
   it('should have the correct name', () => {
     expect(adapter.name).toBe('Binance');

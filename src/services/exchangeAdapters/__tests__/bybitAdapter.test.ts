@@ -1,8 +1,7 @@
-import BybitAdapter from '../bybitAdapter';
-import { P2POrder } from '../../../types';
+import bybitAdapter from '../bybitAdapter';
 
 describe('BybitAdapter', () => {
-  const adapter = new BybitAdapter();
+  const adapter = bybitAdapter;
 
   it('should have the correct name', () => {
     expect(adapter.name).toBe('Bybit');
