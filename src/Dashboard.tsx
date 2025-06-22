@@ -3,18 +3,24 @@
 import useSWR from "swr";
 import React from "react";
 import numbro from "numbro";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../src/components/ui/table';
-import { adapters } from "./services/exchangeAdapters";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../src/components/ui/table";
+import bybitAdapter from "lib/exchanges/bybitAdapter";
+import gateAdapter from "lib/exchanges/gateAdapter";
 
 function useBybitNgnToUsdtOrders() {
   return useSWR(
     ["bybit-ngn-usdt-orders"],
     async () => {
-      const bybit = adapters.find((a) => a.name === "Bybit");
-      if (!bybit) return [];
       try {
         // Bybit expects asset as USDT, fiat as NGN
-        const orders = await bybit.fetchP2POrders("USDT", "NGN", "SELL");
+        const orders = await bybitAdapter.fetchP2POrders("USDT", "NGN", "BUY");
         return orders.slice(0, 10);
       } catch (e) {
         console.error("[DEBUG] Bybit error", e);
@@ -25,12 +31,20 @@ function useBybitNgnToUsdtOrders() {
   );
 }
 
-function OrdersTable({ title, orders, isLoading, amountUnit }: { title: string, orders: any[], isLoading: boolean, amountUnit: string }) {
+function OrdersTable({
+  title,
+  orders,
+  isLoading,
+  amountUnit,
+}: {
+  title: string;
+  orders: any[];
+  isLoading: boolean;
+  amountUnit: string;
+}) {
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h3 className="font-semibold mb-4 text-gray-700 text-lg">
-        {title}
-      </h3>
+      <h3 className="font-semibold mb-4 text-gray-700 text-lg">{title}</h3>
       <Table>
         <TableHeader>
           <TableRow>
@@ -66,19 +80,23 @@ function OrdersTable({ title, orders, isLoading, amountUnit }: { title: string, 
 }
 
 export default function BybitNgnToUsdtTable() {
-  const { data: bybitOrders, isLoading: isBybitLoading } = useBybitNgnToUsdtOrders();
-  const { data: gateOrders, isLoading: isGateLoading } = useGateUsdtToCnyOrders();
+  const { data: bybitOrders, isLoading: isBybitLoading } =
+    useBybitNgnToUsdtOrders();
+  const { data: gateOrders, isLoading: isGateLoading } =
+    useGateUsdtToCnyOrders();
 
   // Calculate best cross rate if both have at least one order
   let bestRate = null;
   let ngnToUsdt = null;
   let usdtToCny = null;
   if (
-    bybitOrders && bybitOrders.length > 0 &&
-    gateOrders && gateOrders.length > 0
+    bybitOrders &&
+    bybitOrders.length > 0 &&
+    gateOrders &&
+    gateOrders.length > 0
   ) {
     ngnToUsdt = bybitOrders[0].price; // NGN per USDT
-    usdtToCny = gateOrders[0].price;  // CNY per USDT
+    usdtToCny = gateOrders[0].price; // CNY per USDT
     if (ngnToUsdt > 0) {
       bestRate = usdtToCny / ngnToUsdt; // CNY per NGN
     }
@@ -107,7 +125,15 @@ export default function BybitNgnToUsdtTable() {
   );
 }
 
-function BestNgnToCnyRateTable({ bestRate, ngnToUsdt, usdtToCny }: { bestRate: number | null, ngnToUsdt: number | null, usdtToCny: number | null }) {
+function BestNgnToCnyRateTable({
+  bestRate,
+  ngnToUsdt,
+  usdtToCny,
+}: {
+  bestRate: number | null;
+  ngnToUsdt: number | null;
+  usdtToCny: number | null;
+}) {
   const reciprocal = bestRate && bestRate > 0 ? 1 / bestRate : null;
 
   // Calculate the max amount able to be exchanged at this rate (limited by available USDT in both top orders)
@@ -115,8 +141,16 @@ function BestNgnToCnyRateTable({ bestRate, ngnToUsdt, usdtToCny }: { bestRate: n
   const { data: bybitOrders } = useBybitNgnToUsdtOrders();
   const { data: gateOrders } = useGateUsdtToCnyOrders();
   let maxUsdt = null;
-  if (bybitOrders && bybitOrders.length > 0 && gateOrders && gateOrders.length > 0) {
-    maxUsdt = Math.min(bybitOrders[0].availableAmount, gateOrders[0].availableAmount);
+  if (
+    bybitOrders &&
+    bybitOrders.length > 0 &&
+    gateOrders &&
+    gateOrders.length > 0
+  ) {
+    maxUsdt = Math.min(
+      bybitOrders[0].availableAmount,
+      gateOrders[0].availableAmount
+    );
   }
 
   return (
@@ -136,11 +170,13 @@ function BestNgnToCnyRateTable({ bestRate, ngnToUsdt, usdtToCny }: { bestRate: n
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell>{ngnToUsdt ? ngnToUsdt.toFixed(2) : 'N/A'}</TableCell>
-            <TableCell>{usdtToCny ? usdtToCny.toFixed(2) : 'N/A'}</TableCell>
-            <TableCell>{bestRate ? bestRate.toFixed(6) : 'N/A'}</TableCell>
-            <TableCell>{reciprocal ? reciprocal.toFixed(6) : 'N/A'}</TableCell>
-            <TableCell>{maxUsdt !== null ? maxUsdt.toFixed(2) : 'N/A'}</TableCell>
+            <TableCell>{ngnToUsdt ? ngnToUsdt.toFixed(2) : "N/A"}</TableCell>
+            <TableCell>{usdtToCny ? usdtToCny.toFixed(2) : "N/A"}</TableCell>
+            <TableCell>{bestRate ? bestRate.toFixed(6) : "N/A"}</TableCell>
+            <TableCell>{reciprocal ? reciprocal.toFixed(6) : "N/A"}</TableCell>
+            <TableCell>
+              {maxUsdt !== null ? maxUsdt.toFixed(2) : "N/A"}
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>
@@ -152,11 +188,8 @@ function useGateUsdtToCnyOrders() {
   return useSWR(
     ["gate-usdt-cny-orders"],
     async () => {
-      const gate = adapters.find((a) => a.name === "Gate");
-      if (!gate) return [];
       try {
-        // Gate expects asset as USDT, fiat as CNY
-        const orders = await gate.fetchP2POrders("USDT", "CNY", "SELL");
+        const orders = await gateAdapter.fetchP2POrders("USDT", "CNY", "SELL");
         return orders.slice(0, 10);
       } catch (e) {
         console.error("[DEBUG] Gate error", e);
@@ -167,13 +200,16 @@ function useGateUsdtToCnyOrders() {
   );
 }
 
-function formatNumber(num: number | null | undefined, format: string = "0.[000]a") {
-  if (num === null || num === undefined || isNaN(num)) return 'N/A';
+function formatNumber(
+  num: number | null | undefined,
+  format: string = "0.[000]a"
+) {
+  if (num === null || num === undefined || isNaN(num)) return "N/A";
   // Use numbro to format with 3 significant figures, no trailing zeros, and thousands separator
   return numbro(num).format({
     mantissa: 3,
     trimMantissa: true,
     optionalMantissa: true,
-    thousandSeparated: true
+    thousandSeparated: true,
   });
 }

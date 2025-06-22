@@ -1,6 +1,6 @@
 // import css
 import "./globals.css";
-import BybitNgnToUsdtTable from "../src/Dashboard";
+import BybitNgnToUsdtTable from "../Dashboard";
 
 function App() {
   return <BybitNgnToUsdtTable />;
