@@ -8,10 +8,10 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import React, { useState } from "react";
-import { TriggerCronButton } from "@/components/TriggerCronButton";
 import numeral from "numeral";
 import useSWR from "swr";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -54,7 +54,8 @@ export default function Home() {
       <div className="overflow-x-auto space-y-8">
         <div>
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-            Bybit NGN/USDT <span className="text-sm font-normal">(Min 1MM NGN)</span>
+            Bybit NGN/USDT{" "}
+            <span className="text-sm font-normal">(Min 1MM NGN)</span>
             <Link
               href="https://www.bybit.com/en/fiat/trade/otc/buy/USDT/NGN"
               target="_blank"
@@ -71,8 +72,12 @@ export default function Home() {
                 <TableHead className="text-right w-36">Price</TableHead>
                 <TableHead className="text-right w-36">Min (NGN)</TableHead>
                 <TableHead className="text-right w-36">Max (NGN)</TableHead>
-                <TableHead className="text-right w-36">Available (USDT)</TableHead>
-                <TableHead className="text-right w-36">Equivalent (NGN)</TableHead>
+                <TableHead className="text-right w-36">
+                  Available (USDT)
+                </TableHead>
+                <TableHead className="text-right w-36">
+                  Equivalent (NGN)
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -101,7 +106,9 @@ export default function Home() {
                   .map((row: any) => (
                     <TableRow
                       key={row.key}
-                      className={`cursor-pointer hover:bg-gray-100 ${selectedBybitRow?.key === row.key ? "bg-blue-100" : ""}`}
+                      className={`cursor-pointer hover:bg-gray-100 ${
+                        selectedBybitRow?.key === row.key ? "bg-blue-100" : ""
+                      }`}
                       onClick={() => setSelectedBybitRow(row)}
                     >
                       <TableCell>{row.name}</TableCell>
@@ -128,7 +135,8 @@ export default function Home() {
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-            Gate USDT/CNY <span className="text-sm font-normal">(Min 1K USDT)</span>
+            Gate USDT/CNY{" "}
+            <span className="text-sm font-normal">(Min 1K USDT)</span>
             <Link
               href="https://www.gate.com/p2p/sell/USDT-CNY"
               target="_blank"
@@ -145,8 +153,12 @@ export default function Home() {
                 <TableHead className="text-right w-36">Price</TableHead>
                 <TableHead className="text-right w-36">Min (USDT)</TableHead>
                 <TableHead className="text-right w-36">Max (USDT)</TableHead>
-                <TableHead className="text-right w-36">Available (USDT)</TableHead>
-                <TableHead className="text-right w-36">Equivalent (CNY)</TableHead>
+                <TableHead className="text-right w-36">
+                  Available (USDT)
+                </TableHead>
+                <TableHead className="text-right w-36">
+                  Equivalent (CNY)
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -175,7 +187,9 @@ export default function Home() {
                   .map((row: any) => (
                     <TableRow
                       key={row.key}
-                      className={`cursor-pointer hover:bg-gray-100 ${selectedGateRow?.key === row.key ? "bg-blue-100" : ""}`}
+                      className={`cursor-pointer hover:bg-gray-100 ${
+                        selectedGateRow?.key === row.key ? "bg-blue-100" : ""
+                      }`}
                       onClick={() => setSelectedGateRow(row)}
                     >
                       <TableCell>{row.name}</TableCell>
@@ -202,7 +216,9 @@ export default function Home() {
         </div>
         {/* Third Table: NGN to CNY Rate */}
         <div>
-          <h2 className="text-xl font-semibold mb-2">NGN → CNY Conversion Rate (via USDT)</h2>
+          <h2 className="text-xl font-semibold mb-2">
+            NGN → CNY Conversion Rate (via USDT)
+          </h2>
           <Table>
             <TableHeader>
               <TableRow>
@@ -238,17 +254,25 @@ export default function Home() {
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
                     return rate ? rate.toFixed(4) : "-";
-                  })()} NGN
+                  })()}{" "}
+                  NGN
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
           <div className="text-xs text-gray-500 mt-1">
-            (Based on selected rows&apos; prices or latest available from each table)
+            (Based on selected rows&apos; prices or latest available from each
+            table)
           </div>
         </div>
       </div>
-      <TriggerCronButton />
+      <Button
+        onClick={() => fetch("/api/refresh-data")}
+        className="mb-4 mt-8"
+        variant={"outline"}
+      >
+        Refresh Data
+      </Button>
     </main>
   );
 }

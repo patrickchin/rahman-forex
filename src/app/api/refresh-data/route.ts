@@ -5,7 +5,7 @@ import {
   fetchGateP2pItems,
 } from "@/lib/fetchP2PItems";
 
-const RATE_LIMIT_KEY = "api/cron:last_call";
+const RATE_LIMIT_KEY = "api/refresh-data:last_call";
 const RATE_LIMIT_SECONDS = 10;
 import { getRedisClient, disconnectRedis } from "@/lib/redisClient";
 
