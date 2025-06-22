@@ -37,7 +37,6 @@ export interface ArbitrageOpportunity {
 export interface ExchangeAdapter {
   name: string;
   fetchP2POrders(asset: string, fiat: string, side: 'BUY' | 'SELL'): Promise<P2POrder[]>;
-  isAvailable(): boolean;
 }
 
 export interface CurrencyPair {

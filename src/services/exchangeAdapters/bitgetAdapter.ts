@@ -1,36 +1,15 @@
-import axios from 'axios';
 import { ExchangeAdapter, P2POrder } from '../../types';
-
-const BITGET_API_URL = 'https://www.bitget.com/v1/p2p/pub/adv/queryAdvList';
 
 const bitgetAdapter: ExchangeAdapter = {
   name: 'Bitget',
   async fetchP2POrders(asset: string, fiat: string, side: 'BUY' | 'SELL'): Promise<P2POrder[]> {
     try {
-      const payload = {
-        side: side === 'BUY' ? 1 : 2,
-        pageNo: 1,
-        pageSize: 20,
-        coinCode: asset,
-        fiatCode: fiat,
-        languageType: 0
-      };
-      const headers = {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json;charset=utf-8',
-      };
-      const response = await axios.post(
-        'http://localhost:4000/proxy',
-        {
-          url: BITGET_API_URL,
-          method: 'POST',
-          data: payload,
-          headers
-        },
-        { timeout: 10000 }
-      );
-      if (response.data?.data?.dataList) {
-        return response.data.data.dataList.map((order: any) => transformOrder(order, asset, fiat, side));
+      // Call Next.js API route instead of direct axios
+      const params = new URLSearchParams({ asset, fiat, side });
+      const res = await fetch(`/api/bitget?${params.toString()}`);
+      const data = await res.json();
+      if (data?.data?.dataList) {
+        return data.data.dataList.map((order: any) => transformOrder(order, asset, fiat, side));
       }
       return [];
     } catch (error) {

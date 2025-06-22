@@ -1,47 +1,15 @@
-import axios from 'axios';
 import { ExchangeAdapter, P2POrder } from '../../types';
-
-const BYBIT_API_URL = 'https://api2.bybit.com/fiat/otc/item/online';
 
 const bybitAdapter: ExchangeAdapter = {
   name: 'Bybit',
   async fetchP2POrders(asset: string, fiat: string, side: 'BUY' | 'SELL'): Promise<P2POrder[]> {
     try {
-      // Bybit expects asset as USDT, fiat as NGN
-      const payload = {
-        userId: '',
-        tokenId: asset,
-        currencyId: fiat,
-        payment: [],
-        side: side === 'BUY' ? '1' : '0',
-        size: '20',
-        page: '1',
-        amount: '',
-        vaMaker: false,
-        bulkMaker: false,
-        canTrade: true,
-        verificationFilter: 0,
-        sortType: 'TRADE_PRICE',
-        paymentPeriod: [],
-        itemRegion: 1
-      };
-      const headers = {
-        'accept': 'application/json',
-        'content-type': 'application/json;charset=UTF-8',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      };
-      const response = await axios.post(
-        'http://localhost:4000/proxy',
-        {
-          url: BYBIT_API_URL,
-          method: 'POST',
-          data: payload,
-          headers
-        },
-        { timeout: 10000 }
-      );
-      if (response.data?.result?.items) {
-        return response.data.result.items.map((order: any) => transformOrder(order, asset, fiat));
+      // Call Next.js API route instead of direct axios
+      const params = new URLSearchParams({ asset, fiat, side });
+      const res = await fetch(`/api/bybit?${params.toString()}`);
+      const data = await res.json();
+      if (data?.result?.items) {
+        return data.result.items.map((order: any) => transformOrder(order, asset, fiat));
       }
       return [];
     } catch (error) {

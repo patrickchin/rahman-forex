@@ -1,50 +1,15 @@
-import axios from 'axios';
 import { ExchangeAdapter, P2POrder } from '../../types';
-
-const GATE_API_URL = 'https://www.gate.com/json_svr/query_push/';
 
 const gateAdapter: ExchangeAdapter = {
   name: 'Gate',
   async fetchP2POrders(asset: string, fiat: string, side: 'BUY' | 'SELL'): Promise<P2POrder[]> {
     try {
-      // Gate.com expects symbol as e.g. USDT_CNY and push_type as 'buy' or 'sell'
-      const symbol = `${asset}_${fiat}`;
-      const params = new URLSearchParams({
-        type: 'push_order_list',
-        symbol,
-        big_trade: '0',
-        fiat_amount: '',
-        amount: '',
-        pay_type: '',
-        is_blue: '0',
-        is_crown: '0',
-        is_follow: '0',
-        have_traded: '0',
-        no_query_hide: '0',
-        remove_limit: '0',
-        per_page: '20',
-        push_type: side.toLowerCase(),
-        sort_type: '1',
-        page: '1',
-      });
-      const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'csrftoken': '1',
-      };
-      const response = await axios.post(
-        'http://localhost:4000/proxy',
-        {
-          url: GATE_API_URL,
-          method: 'POST',
-          data: params.toString(),
-          headers,
-        },
-        { timeout: 10000 }
-      );
-      console.log(`Gate API response for ${asset}/${fiat} ${side}:`, response.data);
-      // Gate.com returns { push_order: [...] }
-      if (response.data?.push_order) {
-        return response.data.push_order.map((order: any) => transformOrder(order, asset, fiat, side));
+      // Call Next.js API route instead of direct axios
+      const params = new URLSearchParams({ asset, fiat, side });
+      const res = await fetch(`/api/gate?${params.toString()}`);
+      const data = await res.json();
+      if (data?.push_order) {
+        return data.push_order.map((order: any) => transformOrder(order, asset, fiat, side));
       }
       return [];
     } catch (error) {
