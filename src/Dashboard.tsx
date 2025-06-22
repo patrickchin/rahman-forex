@@ -36,15 +36,29 @@ function OrdersTable({
   orders,
   isLoading,
   amountUnit,
+  link,
 }: {
   title: string;
   orders: any[];
   isLoading: boolean;
   amountUnit: string;
+  link?: { href: string; label: string };
 }) {
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h3 className="font-semibold mb-4 text-gray-700 text-lg">{title}</h3>
+      <h3 className="font-semibold mb-4 text-gray-700 text-lg flex items-center gap-2">
+        {title}
+        {link && (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline text-sm font-normal ml-2"
+          >
+            {link.label}
+          </a>
+        )}
+      </h3>
       <Table>
         <TableHeader>
           <TableRow>
@@ -114,12 +128,14 @@ export default function BybitNgnToUsdtTable() {
         orders={bybitOrders || []}
         isLoading={isBybitLoading}
         amountUnit="USDT"
+        link={{ href: "https://www.bybit.com/en/fiat/trade/otc/buy/USDT/NGN", label: "Bybit P2P" }}
       />
       <OrdersTable
         title="Top 10 Gate P2P Orders: USDT → CNY"
         orders={gateOrders || []}
         isLoading={isGateLoading}
         amountUnit="USDT"
+        link={{ href: "https://www.gate.com/p2p/buy/USDT-CNY", label: "Gate P2P" }}
       />
     </>
   );
