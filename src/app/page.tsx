@@ -9,9 +9,16 @@ import {
 } from "@/components/ui/table";
 import React, { useState } from "react";
 import numeral from "numeral";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -29,6 +36,8 @@ export default function Home() {
 
   const [selectedBybitRow, setSelectedBybitRow] = useState<any | null>(null);
   const [selectedGateRow, setSelectedGateRow] = useState<any | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [rowCount, setRowCount] = useState(10);
 
   function formatNum(val: number | string) {
     const num = Number(val);
@@ -53,23 +62,47 @@ export default function Home() {
     <main className="p-4 max-w-6xl mx-auto">
       <div className="overflow-x-auto space-y-8">
         <div>
-          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-            Bybit NGN/USDT{" "}
-            <span className="text-sm font-normal">(Min 1MM NGN)</span>
-            <Link
-              href="https://www.bybit.com/en/fiat/trade/otc/buy/USDT/NGN"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline text-sm font-normal"
-            >
-              Open Bybit
-            </Link>
-          </h2>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
+              Buy USDT - Bybit USDT/NGN
+              <span className="text-sm font-normal">(Min 1MM NGN)</span>
+              <Link
+                href="https://www.bybit.com/en/fiat/trade/otc/buy/USDT/NGN"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline text-sm font-normal"
+              >
+                Open Bybit
+              </Link>
+            </h2>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="rowCount"
+                className="text-sm font-medium self-center"
+              >
+                Rows:
+              </label>
+              <Select
+                value={rowCount.toString()}
+                onValueChange={(val) => setRowCount(Number(val))}
+              >
+                <SelectTrigger id="rowCount">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-96">Name</TableHead>
-                <TableHead className="text-right w-36">Price</TableHead>
+                <TableHead className="text-right w-36">Buy Price</TableHead>
                 <TableHead className="text-right w-36">Min (NGN)</TableHead>
                 <TableHead className="text-right w-36">Max (NGN)</TableHead>
                 <TableHead className="text-right w-36">
@@ -101,7 +134,7 @@ export default function Home() {
                 </TableRow>
               ) : (
                 ngn_usdt
-                  .slice(0, 5)
+                  .slice(0, rowCount)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
                     <TableRow
@@ -134,23 +167,47 @@ export default function Home() {
           </Table>
         </div>
         <div>
-          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-            Gate USDT/CNY{" "}
-            <span className="text-sm font-normal">(Min 1K USDT)</span>
-            <Link
-              href="https://www.gate.com/p2p/sell/USDT-CNY"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline text-sm font-normal"
-            >
-              Open Gate
-            </Link>
-          </h2>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
+              Sell USDT - Gate USDT/CNY
+              <span className="text-sm font-normal">(Min 1K USDT)</span>
+              <Link
+                href="https://www.gate.com/p2p/sell/USDT-CNY"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline text-sm font-normal"
+              >
+                Open Gate
+              </Link>
+            </h2>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="rowCount"
+                className="text-sm font-medium self-center"
+              >
+                Rows:
+              </label>
+              <Select
+                value={rowCount.toString()}
+                onValueChange={(val) => setRowCount(Number(val))}
+              >
+                <SelectTrigger id="rowCount">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-96">Name</TableHead>
-                <TableHead className="text-right w-36">Price</TableHead>
+                <TableHead className="text-right w-36">Sell Price</TableHead>
                 <TableHead className="text-right w-36">Min (USDT)</TableHead>
                 <TableHead className="text-right w-36">Max (USDT)</TableHead>
                 <TableHead className="text-right w-36">
@@ -182,7 +239,7 @@ export default function Home() {
                 </TableRow>
               ) : (
                 usdt_cny
-                  .slice(0, 5)
+                  .slice(0, rowCount)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
                     <TableRow
@@ -225,6 +282,7 @@ export default function Home() {
                 <TableHead>Selected USDT/NGN Price</TableHead>
                 <TableHead>Selected USDT/CNY Price</TableHead>
                 <TableHead>1 CNY ≈ ? NGN</TableHead>
+                <TableHead>1,000,000 NGN ≈ ? CNY</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -257,7 +315,42 @@ export default function Home() {
                   })()}{" "}
                   NGN
                 </TableCell>
+                <TableCell className="font-mono">
+                  {(() => {
+                    const ngnUsdtPrice = selectedBybitRow
+                      ? selectedBybitRow.price
+                      : ngn_usdt && ngn_usdt[0]?.price;
+                    const usdtCnyPrice = selectedGateRow
+                      ? selectedGateRow.price
+                      : usdt_cny && usdt_cny[0]?.price;
+                    if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
+                    const cny = (1_000_000 / ngnUsdtPrice) * usdtCnyPrice;
+                    return formatNum(cny);
+                  })()}{" "}
+                  CNY
+                </TableCell>
               </TableRow>
+              {/* Selected available USDT row */}
+              {selectedBybitRow && selectedGateRow && (
+                <TableRow>
+                  <TableCell className="font-mono font-semibold" colSpan={2}>
+                    Max Available
+                  </TableCell>
+                  <TableCell className="font-mono" colSpan={2}>
+                    {(() => {
+                      const usdt = Math.min(
+                        selectedBybitRow.available,
+                        selectedGateRow.available
+                      );
+                      const ngn = usdt * selectedBybitRow.price;
+                      const cny = usdt * selectedGateRow.price;
+                      return `${formatNum(usdt)} USDT = ${formatNum(
+                        ngn
+                      )} NGN = ${formatNum(cny)} CNY`;
+                    })()}
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
           <div className="text-xs text-gray-500 mt-1">
@@ -267,11 +360,20 @@ export default function Home() {
         </div>
       </div>
       <Button
-        onClick={() => fetch("/api/refresh-data")}
+        onClick={async () => {
+          setRefreshing(true);
+          await fetch("/api/refresh-data");
+          await Promise.all([
+            mutate("/api/getLatestBybit"),
+            mutate("/api/getLatestGate"),
+          ]);
+          setRefreshing(false);
+        }}
         className="mb-4 mt-8"
         variant={"outline"}
+        disabled={refreshing}
       >
-        Refresh Data
+        {refreshing ? "Refreshing..." : "Refresh Data"}
       </Button>
     </main>
   );

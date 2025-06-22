@@ -22,13 +22,21 @@ export async function GET() {
     }
     await redis.set(RATE_LIMIT_KEY, now);
 
-    // Fetch USDT/NGN from Bybit (BUY)
+    // Fetch USDT/NGN from Bybit (BUY) and USDT/CNY from Gate (SELL) in parallel
     const bybitParams: FetchP2pParams = {
       asset: "USDT",
       fiat: "NGN",
       side: "BUY",
     };
-    const bybitData = await fetchBybitP2pItems(bybitParams);
+    const gateParams: FetchP2pParams = {
+      asset: "USDT",
+      fiat: "CNY",
+      side: "SELL",
+    };
+    const [bybitData, gateData] = await Promise.all([
+      fetchBybitP2pItems(bybitParams),
+      fetchGateP2pItems(gateParams),
+    ]);
     await db.insert(p2pAdvertOrderHistory).values({
       exchange: "bybit",
       asset: bybitParams.asset,
@@ -36,14 +44,6 @@ export async function GET() {
       side: bybitParams.side,
       data: JSON.stringify(bybitData),
     });
-
-    // Fetch USDT/CNY from Gate (SELL)
-    const gateParams: FetchP2pParams = {
-      asset: "USDT",
-      fiat: "CNY",
-      side: "SELL",
-    };
-    const gateData = await fetchGateP2pItems(gateParams);
     await db.insert(p2pAdvertOrderHistory).values({
       exchange: "gate",
       asset: gateParams.asset,
