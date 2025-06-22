@@ -37,7 +37,7 @@ export default function Home() {
   const [selectedBybitRow, setSelectedBybitRow] = useState<any | null>(null);
   const [selectedGateRow, setSelectedGateRow] = useState<any | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [rowCount, setRowCount] = useState(10);
+  const [rowCount, setRowCount] = useState(5);
 
   function formatNum(val: number | string) {
     const num = Number(val);
@@ -91,6 +91,7 @@ export default function Home() {
                 </SelectTrigger>
                 <SelectContent align="end">
                   <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
                   <SelectItem value="5">5</SelectItem>
                   <SelectItem value="10">10</SelectItem>
                   <SelectItem value="20">20</SelectItem>
@@ -196,6 +197,7 @@ export default function Home() {
                 </SelectTrigger>
                 <SelectContent align="end">
                   <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
                   <SelectItem value="5">5</SelectItem>
                   <SelectItem value="10">10</SelectItem>
                   <SelectItem value="20">20</SelectItem>
