@@ -9,8 +9,8 @@ const RATE_LIMIT_KEY = "api/cron:last_call";
 const RATE_LIMIT_SECONDS = 10;
 import { getRedisClient, disconnectRedis } from "@/lib/redisClient";
 
-export async function GET(request: Request) {
-  const redis = getRedisClient();
+export async function GET() {
+  const redis = await getRedisClient();
   try {
     const lastCall = await redis.get(RATE_LIMIT_KEY);
     const now = Math.floor(Date.now() / 1000);

@@ -1,19 +1,18 @@
 // src/lib/redisClient.ts
 
-let redisClient: any = null;
+import type IORedis from 'ioredis';
+import type { Redis as UpstashRedis } from '@upstash/redis';
 
-export function getRedisClient() {
+let redisClient: IORedis | UpstashRedis | null = null;
+
+export async function getRedisClient(): Promise<IORedis | UpstashRedis> {
   if (redisClient) return redisClient;
 
   if (process.env.NODE_ENV === 'development') {
-    // Use ioredis for local development
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const IORedis = require('ioredis');
+    const { default: IORedis } = await import('ioredis');
     redisClient = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379');
   } else {
-    // Use Upstash for production
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { Redis } = require('@upstash/redis');
+    const { Redis } = await import('@upstash/redis');
     redisClient = Redis.fromEnv();
   }
   return redisClient;
@@ -21,7 +20,8 @@ export function getRedisClient() {
 
 export async function disconnectRedis() {
   if (process.env.NODE_ENV === 'development' && redisClient) {
-    await redisClient.disconnect();
+    // @ts-expect-error: disconnect exists on IORedis but not Upstash
+    await redisClient.disconnect?.();
     redisClient = null;
   }
 }

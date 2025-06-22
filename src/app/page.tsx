@@ -26,14 +26,14 @@ export default function Home() {
     error: errorGate,
   } = useSWR("/api/getLatestGate", fetcher);
 
-  function formatNum(val: any) {
+  function formatNum(val: number | string) {
     const num = Number(val);
     if (isNaN(num)) return val;
     if (num === 0) return "0.00";
     return numeral(num).format("0,0.00");
   }
 
-  function calcFiat(available: any, price: any) {
+  function calcFiat(available: number | string, price: number | string) {
     const a = Number(available);
     const p = Number(price);
     if (isNaN(a) || isNaN(p)) return "-";
