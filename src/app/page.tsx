@@ -7,7 +7,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import React from "react";
+import React, { useState } from "react";
 import { TriggerCronButton } from "@/components/TriggerCronButton";
 import numeral from "numeral";
 import useSWR from "swr";
@@ -26,6 +26,9 @@ export default function Home() {
     error: errorGate,
   } = useSWR("/api/getLatestGate", fetcher);
 
+  const [selectedBybitRow, setSelectedBybitRow] = useState<any | null>(null);
+  const [selectedGateRow, setSelectedGateRow] = useState<any | null>(null);
+
   function formatNum(val: number | string) {
     const num = Number(val);
     if (isNaN(num)) return val;
@@ -38,6 +41,11 @@ export default function Home() {
     const p = Number(price);
     if (isNaN(a) || isNaN(p)) return "-";
     return formatNum(a * p);
+  }
+
+  function getConversionRate(ngnUsdtPrice: number, usdtCnyPrice: number) {
+    if (!ngnUsdtPrice || !usdtCnyPrice) return null;
+    return ngnUsdtPrice / usdtCnyPrice;
   }
 
   return (
@@ -80,7 +88,11 @@ export default function Home() {
                   .slice(0, 5)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
-                    <TableRow key={row.key}>
+                    <TableRow
+                      key={row.key}
+                      className={`cursor-pointer hover:bg-gray-100 ${selectedBybitRow?.key === row.key ? "bg-blue-100" : ""}`}
+                      onClick={() => setSelectedBybitRow(row)}
+                    >
                       <TableCell>{row.name}</TableCell>
                       <TableCell className="text-right font-mono">
                         {formatNum(row.price)}
@@ -140,7 +152,11 @@ export default function Home() {
                   .slice(0, 5)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
-                    <TableRow key={row.key}>
+                    <TableRow
+                      key={row.key}
+                      className={`cursor-pointer hover:bg-gray-100 ${selectedGateRow?.key === row.key ? "bg-blue-100" : ""}`}
+                      onClick={() => setSelectedGateRow(row)}
+                    >
                       <TableCell>{row.name}</TableCell>
                       <TableCell className="text-right font-mono">
                         {formatNum(row.price)}
@@ -162,6 +178,53 @@ export default function Home() {
               )}
             </TableBody>
           </Table>
+        </div>
+        {/* Third Table: NGN to CNY Rate */}
+        <div>
+          <h2 className="text-xl font-semibold mb-2">NGN → CNY Conversion Rate (via USDT)</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Selected NGN/USDT Price</TableHead>
+                <TableHead>Selected USDT/CNY Price</TableHead>
+                <TableHead>1 NGN ≈ ? CNY</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-mono">
+                  {selectedBybitRow
+                    ? formatNum(selectedBybitRow.price)
+                    : ngn_usdt && ngn_usdt[0]?.price
+                    ? formatNum(ngn_usdt[0].price)
+                    : "-"}
+                </TableCell>
+                <TableCell className="font-mono">
+                  {selectedGateRow
+                    ? formatNum(selectedGateRow.price)
+                    : usdt_cny && usdt_cny[0]?.price
+                    ? formatNum(usdt_cny[0].price)
+                    : "-"}
+                </TableCell>
+                <TableCell className="font-mono">
+                  {(() => {
+                    const ngnUsdtPrice = selectedBybitRow
+                      ? selectedBybitRow.price
+                      : ngn_usdt && ngn_usdt[0]?.price;
+                    const usdtCnyPrice = selectedGateRow
+                      ? selectedGateRow.price
+                      : usdt_cny && usdt_cny[0]?.price;
+                    if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
+                    const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
+                    return rate ? rate.toFixed(4) : "-";
+                  })()} CNY
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+          <div className="text-xs text-gray-500 mt-1">
+            (Based on selected rows' prices or latest available from each table)
+          </div>
         </div>
       </div>
       <TriggerCronButton />
