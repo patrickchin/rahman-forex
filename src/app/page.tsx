@@ -1,9 +1,15 @@
 // import css
-import "./globals.css";
+import "@styles/globals.css";
 import BybitNgnToUsdtTable from "../Dashboard";
+import NgnCnyRateChart from "../components/NgnCnyRateChart";
 
 function App() {
-  return <BybitNgnToUsdtTable />;
+  return (
+    <>
+      <NgnCnyRateChart />
+      <BybitNgnToUsdtTable />
+    </>
+  );
 }
 
 export default App;

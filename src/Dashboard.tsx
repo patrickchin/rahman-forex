@@ -14,16 +14,42 @@ import {
 import bybitAdapter from "lib/exchanges/bybitAdapter";
 import gateAdapter from "lib/exchanges/gateAdapter";
 
-function useBybitNgnToUsdtOrders() {
+type UseP2POrdersArgs = {
+  exchange: "bybit" | "gate";
+  asset: string;
+  fiat: string;
+  side: "BUY" | "SELL";
+  sortDirection?: "asc" | "desc";
+  limit?: number;
+};
+
+function useP2POrders({
+  exchange,
+  asset,
+  fiat,
+  side,
+  sortDirection = "asc",
+  limit = 10,
+}: UseP2POrdersArgs) {
   return useSWR(
-    ["bybit-ngn-usdt-orders"],
+    [exchange, asset, fiat, side],
     async () => {
       try {
-        // Bybit expects asset as USDT, fiat as NGN
-        const orders = await bybitAdapter.fetchP2POrders("USDT", "NGN", "BUY");
-        return orders.slice(0, 10);
+        let orders;
+        if (exchange === "bybit") {
+          orders = await bybitAdapter.fetchP2POrders(asset, fiat, side);
+        } else if (exchange === "gate") {
+          orders = await gateAdapter.fetchP2POrders(asset, fiat, side);
+        } else {
+          throw new Error("Unsupported exchange");
+        }
+        // Sort by price
+        const sorted = orders.sort((a, b) =>
+          sortDirection === "asc" ? a.price - b.price : b.price - a.price
+        );
+        return sorted.slice(0, limit);
       } catch (e) {
-        console.error("[DEBUG] Bybit error", e);
+        console.error(`[DEBUG] ${exchange} error`, e);
         return [];
       }
     },
@@ -93,35 +119,29 @@ function OrdersTable({
   );
 }
 
-export default function BybitNgnToUsdtTable() {
-  const { data: bybitOrders, isLoading: isBybitLoading } =
-    useBybitNgnToUsdtOrders();
-  const { data: gateOrders, isLoading: isGateLoading } =
-    useGateUsdtToCnyOrders();
-
-  // Calculate best cross rate if both have at least one order
-  let bestRate = null;
-  let ngnToUsdt = null;
-  let usdtToCny = null;
-  if (
-    bybitOrders &&
-    bybitOrders.length > 0 &&
-    gateOrders &&
-    gateOrders.length > 0
-  ) {
-    ngnToUsdt = bybitOrders[0].price; // NGN per USDT
-    usdtToCny = gateOrders[0].price; // CNY per USDT
-    if (ngnToUsdt > 0) {
-      bestRate = usdtToCny / ngnToUsdt; // CNY per NGN
-    }
-  }
+function NgnCnyDashboard() {
+  const { data: bybitOrders, isLoading: isBybitLoading } = useP2POrders({
+    exchange: "bybit",
+    asset: "USDT",
+    fiat: "NGN",
+    side: "BUY",
+    sortDirection: "asc",
+    limit: 10,
+  });
+  const { data: gateOrders, isLoading: isGateLoading } = useP2POrders({
+    exchange: "gate",
+    asset: "USDT",
+    fiat: "CNY",
+    side: "SELL",
+    sortDirection: "desc",
+    limit: 10,
+  });
 
   return (
     <>
       <BestNgnToCnyRateTable
-        bestRate={bestRate}
-        ngnToUsdt={ngnToUsdt}
-        usdtToCny={usdtToCny}
+        bybitOrders={bybitOrders}
+        gateOrders={gateOrders}
       />
       <OrdersTable
         title="Top 10 Bybit P2P Orders: NGN → USDT"
@@ -141,21 +161,34 @@ export default function BybitNgnToUsdtTable() {
   );
 }
 
+export default NgnCnyDashboard;
+
 function BestNgnToCnyRateTable({
-  bestRate,
-  ngnToUsdt,
-  usdtToCny,
+  bybitOrders,
+  gateOrders,
 }: {
-  bestRate: number | null;
-  ngnToUsdt: number | null;
-  usdtToCny: number | null;
+  bybitOrders?: any[];
+  gateOrders?: any[];
 }) {
+  let bestRate = null;
+  let ngnToUsdt = null;
+  let usdtToCny = null;
+  if (
+    bybitOrders &&
+    bybitOrders.length > 0 &&
+    gateOrders &&
+    gateOrders.length > 0
+  ) {
+    ngnToUsdt = bybitOrders[0].price; // NGN per USDT
+    usdtToCny = gateOrders[0].price; // CNY per USDT
+    if (ngnToUsdt > 0) {
+      bestRate = usdtToCny / ngnToUsdt; // CNY per NGN
+    }
+  }
   const reciprocal = bestRate && bestRate > 0 ? 1 / bestRate : null;
 
   // Calculate the max amount able to be exchanged at this rate (limited by available USDT in both top orders)
   // This is the minimum of the availableAmount from Bybit and Gate top orders
-  const { data: bybitOrders } = useBybitNgnToUsdtOrders();
-  const { data: gateOrders } = useGateUsdtToCnyOrders();
   let maxUsdt = null;
   if (
     bybitOrders &&
@@ -197,22 +230,6 @@ function BestNgnToCnyRateTable({
         </TableBody>
       </Table>
     </div>
-  );
-}
-
-function useGateUsdtToCnyOrders() {
-  return useSWR(
-    ["gate-usdt-cny-orders"],
-    async () => {
-      try {
-        const orders = await gateAdapter.fetchP2POrders("USDT", "CNY", "SELL");
-        return orders.slice(0, 10);
-      } catch (e) {
-        console.error("[DEBUG] Gate error", e);
-        return [];
-      }
-    },
-    { revalidateOnFocus: false }
   );
 }
 

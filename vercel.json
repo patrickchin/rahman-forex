@@ -1,0 +1,8 @@
+{
+  "cron": [
+    {
+      "path": "/api/cron/save-ngn-cny-rate",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
