@@ -244,7 +244,7 @@ export default function Home() {
             </TableBody>
           </Table>
           <div className="text-xs text-gray-500 mt-1">
-            (Based on selected rows' prices or latest available from each table)
+            (Based on selected rows&apos; prices or latest available from each table)
           </div>
         </div>
       </div>
