@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { TriggerCronButton } from "@/components/TriggerCronButton";
 import numeral from "numeral";
 import useSWR from "swr";
+import Link from "next/link";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -52,7 +53,17 @@ export default function Home() {
     <main className="p-4 max-w-6xl">
       <div className="overflow-x-auto space-y-8">
         <div>
-          <h2 className="text-xl font-semibold mb-2">Bybit NGN/USDT</h2>
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+            Bybit NGN/USDT
+            <Link
+              href="https://www.bybit.com/en/fiat/trade/otc/buy/USDT/NGN"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline text-sm font-normal"
+            >
+              (Open Bybit)
+            </Link>
+          </h2>
           <Table>
             <TableHeader>
               <TableRow>
@@ -116,7 +127,17 @@ export default function Home() {
           </Table>
         </div>
         <div>
-          <h2 className="text-xl font-semibold mb-2">Gate USDT/CNY</h2>
+          <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+            Gate USDT/CNY
+            <Link
+              href="https://www.gate.com/p2p/sell/USDT-CNY"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline text-sm font-normal"
+            >
+              (Open Gate)
+            </Link>
+          </h2>
           <Table>
             <TableHeader>
               <TableRow>
