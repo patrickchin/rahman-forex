@@ -50,18 +50,18 @@ export default function Home() {
   }
 
   return (
-    <main className="p-4 max-w-6xl">
+    <main className="p-4 max-w-6xl mx-auto">
       <div className="overflow-x-auto space-y-8">
         <div>
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-            Bybit NGN/USDT
+            Bybit NGN/USDT <span className="text-sm font-normal">(Min 1MM NGN)</span>
             <Link
               href="https://www.bybit.com/en/fiat/trade/otc/buy/USDT/NGN"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline text-sm font-normal"
             >
-              (Open Bybit)
+              Open Bybit
             </Link>
           </h2>
           <Table>
@@ -128,14 +128,14 @@ export default function Home() {
         </div>
         <div>
           <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-            Gate USDT/CNY
+            Gate USDT/CNY <span className="text-sm font-normal">(Min 1K USDT)</span>
             <Link
               href="https://www.gate.com/p2p/sell/USDT-CNY"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline text-sm font-normal"
             >
-              (Open Gate)
+              Open Gate
             </Link>
           </h2>
           <Table>
@@ -206,9 +206,9 @@ export default function Home() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Selected NGN/USDT Price</TableHead>
+                <TableHead>Selected USDT/NGN Price</TableHead>
                 <TableHead>Selected USDT/CNY Price</TableHead>
-                <TableHead>1 NGN ≈ ? CNY</TableHead>
+                <TableHead>1 CNY ≈ ? NGN</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -238,7 +238,7 @@ export default function Home() {
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
                     return rate ? rate.toFixed(4) : "-";
-                  })()} CNY
+                  })()} NGN
                 </TableCell>
               </TableRow>
             </TableBody>
