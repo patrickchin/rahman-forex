@@ -39,6 +39,10 @@ export default function Home() {
   const [selectedGateRow, setSelectedGateRow] = useState<any | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [rowCount, setRowCount] = useState(5);
+  const [refreshStatus, setRefreshStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [refreshError, setRefreshError] = useState<string>("");
 
   function formatNum(val: number | string) {
     const num = Number(val);
@@ -106,7 +110,8 @@ export default function Home() {
               <div className="font-mono whitespace-pre">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                   <span>
-                    Last updated: {new Date(ngn_usdt.fetched_at).toLocaleString()}
+                    Last updated:{" "}
+                    {new Date(ngn_usdt.fetched_at).toLocaleString()}
                   </span>
                   <span className="hidden sm:inline mx-1">|</span>
                   <span>
@@ -115,7 +120,7 @@ export default function Home() {
                     })}
                   </span>
                 </div>
-                <div>Time now:     {new Date().toLocaleString()}</div>
+                <div>Time now: {new Date().toLocaleString()}</div>
               </div>
             ) : (
               <span className="font-mono">Last updated: Unknown</span>
@@ -233,7 +238,8 @@ export default function Home() {
               <div className="font-mono whitespace-pre">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                   <span>
-                    Last updated: {new Date(usdt_cny.fetched_at).toLocaleString()}
+                    Last updated:{" "}
+                    {new Date(usdt_cny.fetched_at).toLocaleString()}
                   </span>
                   <span className="hidden sm:inline mx-1">|</span>
                   <span>
@@ -242,7 +248,7 @@ export default function Home() {
                     })}
                   </span>
                 </div>
-                <div>Time now:     {new Date().toLocaleString()}</div>
+                <div>Time now: {new Date().toLocaleString()}</div>
               </div>
             ) : (
               <span className="font-mono">Last updated: Unknown</span>
@@ -404,22 +410,45 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <Button
-        onClick={async () => {
-          setRefreshing(true);
-          await fetch("/api/refresh-data");
-          await Promise.all([
-            mutate("/api/getLatestBybit"),
-            mutate("/api/getLatestGate"),
-          ]);
-          setRefreshing(false);
-        }}
-        className="mb-4 mt-8"
-        variant={"outline"}
-        disabled={refreshing}
-      >
-        {refreshing ? "Refreshing..." : "Refresh Data"}
-      </Button>
+      <div className="flex pt-8 items-center gap-2 font-mono text-sm">
+        <Button
+          onClick={async () => {
+            setRefreshing(true);
+            setRefreshStatus("idle");
+            setRefreshError("");
+            try {
+              const res = await fetch("/api/refresh-data");
+              const data = await res.json();
+              if (res.ok && data.success) {
+                setRefreshStatus("success");
+                await Promise.all([
+                  mutate("/api/getLatestBybit"),
+                  mutate("/api/getLatestGate"),
+                ]);
+              } else {
+                setRefreshStatus("error");
+                setRefreshError(data.error || "Unknown error");
+              }
+            } catch (e: any) {
+              setRefreshStatus("error");
+              setRefreshError(e?.message || "Unknown error");
+            } finally {
+              setRefreshing(false);
+              setTimeout(() => setRefreshStatus("idle"), 4000);
+            }
+          }}
+          variant={"outline"}
+          disabled={refreshing}
+        >
+          {refreshing ? "Refreshing..." : "Refresh Data"}
+        </Button>
+        {refreshStatus === "success" && (
+          <div className="text-green-600">Refresh successful!</div>
+        )}
+        {refreshStatus === "error" && (
+          <div className="text-red-600">Refresh failed: {refreshError}</div>
+        )}
+      </div>
     </main>
   );
 }
