@@ -10,19 +10,47 @@ const RATE_LIMIT_SECONDS = 10;
 import { getRedisClient, disconnectRedis } from "@/lib/redisClient";
 
 export async function GET() {
-  const redis = await getRedisClient();
+  let redis;
   try {
-    const lastCall = await redis.get(RATE_LIMIT_KEY);
-    const now = Math.floor(Date.now() / 1000);
-    if (lastCall && now - Number(lastCall) < RATE_LIMIT_SECONDS) {
+    try {
+      redis = await getRedisClient();
+    } catch (error) {
+      console.error("Error connecting to Redis:", error);
       return Response.json(
-        { success: false, error: "Rate limit exceeded. Try again later." },
-        { status: 429 }
+        {
+          success: false,
+          error: "Failed to connect to Redis.",
+          details: error instanceof Error ? error.message : error,
+        },
+        { status: 500 }
       );
     }
-    await redis.set(RATE_LIMIT_KEY, now);
 
-    // Fetch USDT/NGN from Bybit (BUY) and USDT/CNY from Gate (SELL) in parallel
+    let lastCall;
+    let now;
+    try {
+      lastCall = await redis.get(RATE_LIMIT_KEY);
+      now = Math.floor(Date.now() / 1000);
+      if (lastCall && now - Number(lastCall) < RATE_LIMIT_SECONDS) {
+        return Response.json(
+          { success: false, error: "Rate limit exceeded. Try again later." },
+          { status: 429 }
+        );
+      }
+      await redis.set(RATE_LIMIT_KEY, now);
+    } catch (error) {
+      console.error("Error during Redis rate limit check:", error);
+      return Response.json(
+        {
+          success: false,
+          error: "Redis rate limit check failed.",
+          details: error instanceof Error ? error.message : error,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Fetch USDT/NGN from Bybit (BUY) and USDT/CNY from Gate (SELL) in parallel, but distinguish errors
     const bybitParams: FetchP2pParams = {
       asset: "USDT",
       fiat: "NGN",
@@ -33,33 +61,84 @@ export async function GET() {
       fiat: "CNY",
       side: "SELL",
     };
-    const [bybitData, gateData] = await Promise.all([
+    const [bybitResult, gateResult] = await Promise.allSettled([
       fetchBybitP2pItems(bybitParams),
       fetchGateP2pItems(gateParams),
     ]);
-    await db.insert(p2pAdvertOrderHistory).values({
-      exchange: "bybit",
-      asset: bybitParams.asset,
-      fiat: bybitParams.fiat,
-      side: bybitParams.side,
-      data: JSON.stringify(bybitData),
-    });
-    await db.insert(p2pAdvertOrderHistory).values({
-      exchange: "gate",
-      asset: gateParams.asset,
-      fiat: gateParams.fiat,
-      side: gateParams.side,
-      data: JSON.stringify(gateData),
-    });
+
+    if (bybitResult.status === "rejected") {
+      console.error("Error fetching Bybit P2P data:", bybitResult.reason);
+      return Response.json(
+        {
+          success: false,
+          error: "Failed to fetch Bybit P2P data.",
+          details:
+            bybitResult.reason instanceof Error
+              ? bybitResult.reason.message
+              : bybitResult.reason,
+        },
+        { status: 502 }
+      );
+    }
+    if (gateResult.status === "rejected") {
+      console.error("Error fetching Gate P2P data:", gateResult.reason);
+      return Response.json(
+        {
+          success: false,
+          error: "Failed to fetch Gate P2P data.",
+          details:
+            gateResult.reason instanceof Error
+              ? gateResult.reason.message
+              : gateResult.reason,
+        },
+        { status: 502 }
+      );
+    }
+    const bybitData = bybitResult.value;
+    const gateData = gateResult.value;
+
+    try {
+      await db.insert(p2pAdvertOrderHistory).values({
+        exchange: "bybit",
+        asset: "USDT",
+        fiat: "NGN",
+        side: "BUY",
+        data: JSON.stringify(bybitData),
+      });
+      await db.insert(p2pAdvertOrderHistory).values({
+        exchange: "gate",
+        asset: "USDT",
+        fiat: "CNY",
+        side: "SELL",
+        data: JSON.stringify(gateData),
+      });
+    } catch (error) {
+      console.error("Error inserting into database:", error);
+      return Response.json(
+        {
+          success: false,
+          error: "Database insert failed.",
+          details: error instanceof Error ? error.message : error,
+        },
+        { status: 500 }
+      );
+    }
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error("Error in cron job:", error);
-    return Response.json({
-      success: false,
-      error: error instanceof Error ? error.message : error,
-    });
+    console.error("Unknown error in /api/refresh-data request:", error);
+    return Response.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : error,
+      },
+      { status: 500 }
+    );
   } finally {
-    await disconnectRedis();
+    try {
+      await disconnectRedis();
+    } catch (error) {
+      console.error("Error disconnecting Redis:", error);
+    }
   }
 }
