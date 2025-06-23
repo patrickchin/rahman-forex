@@ -74,6 +74,8 @@ export async function fetchBinanceP2pItems({ asset, fiat, side }: FetchP2pParams
 
 export async function fetchGateP2pItems({ asset, fiat, side }: FetchP2pParams) {
   const symbol = `${asset}_${fiat}`;
+  // Swap 'SELL' and 'BUY' for Gate API
+  const gateSide = side === 'SELL' ? 'BUY' : 'SELL';
   const params = new URLSearchParams({
     type: 'push_order_list',
     symbol,
@@ -88,7 +90,7 @@ export async function fetchGateP2pItems({ asset, fiat, side }: FetchP2pParams) {
     no_query_hide: '0',
     remove_limit: '0',
     per_page: '20',
-    push_type: side.toLowerCase(),
+    push_type: gateSide,
     sort_type: '1',
     page: '1',
   });
