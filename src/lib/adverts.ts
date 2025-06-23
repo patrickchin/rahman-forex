@@ -59,6 +59,14 @@ export async function getLatestGate() {
   // Map Gate ads to unified type
   const mappedItems = items.map((ad: any) => {
     const { min, max } = parseGateMinMax(ad.limit_total || ad.limit_fiat || "");
+    // Swap the side: if ad.type is 'buy' make it 'SELL', if 'sell' make it 'BUY'
+    let side = "SELL";
+    if (ad.type) {
+      const t = ad.type.toLowerCase();
+      if (t === "buy") side = "SELL";
+      else if (t === "sell") side = "BUY";
+      else side = ad.type.toUpperCase();
+    }
     return {
       time: ad.online_status || "",
       userId: ad.uid || ad.username || "",
@@ -69,7 +77,7 @@ export async function getLatestGate() {
       available: ad.amount,
       currency: ad.curr_a || "USDT",
       payment: ad.pay_type_num || "",
-      side: ad.type ? ad.type.toUpperCase() : "SELL",
+      side,
       key: ad.oid || ad.uid || ad.username || Math.random().toString(),
     };
   });
