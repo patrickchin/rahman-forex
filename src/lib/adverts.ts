@@ -16,7 +16,7 @@ export async function getLatestBybit() {
     .orderBy(desc(p2pAdvertOrderHistory.id));
   const items = (ngn_usdt[0]?.data as any)?.result?.items || [];
   // Map Bybit ads to unified type
-  return items.map((ad: any) => ({
+  const mappedItems = items.map((ad: any) => ({
     time: ad.createDate ? new Date(Number(ad.createDate)).toLocaleString() : "",
     userId: ad.userId || ad.accountId || "",
     name: ad.nickName || "",
@@ -29,6 +29,10 @@ export async function getLatestBybit() {
     side: ad.side === 1 ? "BUY" : "SELL",
     key: ad.id || ad.userId || ad.accountId || ad.createDate || Math.random().toString(),
   }));
+  return {
+    ...ngn_usdt[0],
+    data: mappedItems,
+  };
 }
 
 function parseGateMinMax(limit: string): { min: string, max: string } {
@@ -53,7 +57,7 @@ export async function getLatestGate() {
     .orderBy(desc(p2pAdvertOrderHistory.id));
   const items = (usdt_cny[0]?.data as any)?.push_order || [];
   // Map Gate ads to unified type
-  return items.map((ad: any) => {
+  const mappedItems = items.map((ad: any) => {
     const { min, max } = parseGateMinMax(ad.limit_total || ad.limit_fiat || "");
     return {
       time: ad.online_status || "",
@@ -69,4 +73,8 @@ export async function getLatestGate() {
       key: ad.oid || ad.uid || ad.username || Math.random().toString(),
     };
   });
+  return {
+    ...usdt_cny[0],
+    data: mappedItems,
+  };
 }

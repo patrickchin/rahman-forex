@@ -19,6 +19,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { formatDistanceToNow } from "date-fns";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -99,6 +100,27 @@ export default function Home() {
               </Select>
             </div>
           </div>
+          {/* Info below title */}
+          <div className="text-sm text-muted-foreground mb-2">
+            {ngn_usdt && ngn_usdt.fetched_at ? (
+              <div className="font-mono whitespace-pre">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                  <span>
+                    Last updated: {new Date(ngn_usdt.fetched_at).toLocaleString()}
+                  </span>
+                  <span className="hidden sm:inline mx-1">|</span>
+                  <span>
+                    {formatDistanceToNow(new Date(ngn_usdt.fetched_at), {
+                      addSuffix: true,
+                    })}
+                  </span>
+                </div>
+                <div>Time now:     {new Date().toLocaleString()}</div>
+              </div>
+            ) : (
+              <span className="font-mono">Last updated: Unknown</span>
+            )}
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -127,14 +149,14 @@ export default function Home() {
                     Error loading data
                   </TableCell>
                 </TableRow>
-              ) : !ngn_usdt || ngn_usdt.length === 0 ? (
+              ) : !ngn_usdt || !ngn_usdt.data || ngn_usdt.data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-4">
                     No data
                   </TableCell>
                 </TableRow>
               ) : (
-                ngn_usdt
+                ngn_usdt.data
                   .slice(0, rowCount)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
@@ -205,6 +227,27 @@ export default function Home() {
               </Select>
             </div>
           </div>
+          {/* Info below title */}
+          <div className="text-sm text-muted-foreground mb-2">
+            {usdt_cny && usdt_cny.fetched_at ? (
+              <div className="font-mono whitespace-pre">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                  <span>
+                    Last updated: {new Date(usdt_cny.fetched_at).toLocaleString()}
+                  </span>
+                  <span className="hidden sm:inline mx-1">|</span>
+                  <span>
+                    {formatDistanceToNow(new Date(usdt_cny.fetched_at), {
+                      addSuffix: true,
+                    })}
+                  </span>
+                </div>
+                <div>Time now:     {new Date().toLocaleString()}</div>
+              </div>
+            ) : (
+              <span className="font-mono">Last updated: Unknown</span>
+            )}
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -233,14 +276,14 @@ export default function Home() {
                     Error loading data
                   </TableCell>
                 </TableRow>
-              ) : !usdt_cny || usdt_cny.length === 0 ? (
+              ) : !usdt_cny || !usdt_cny.data || usdt_cny.data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-4">
                     No data
                   </TableCell>
                 </TableRow>
               ) : (
-                usdt_cny
+                usdt_cny.data
                   .slice(0, rowCount)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
@@ -292,25 +335,25 @@ export default function Home() {
                 <TableCell className="font-mono">
                   {selectedBybitRow
                     ? formatNum(selectedBybitRow.price)
-                    : ngn_usdt && ngn_usdt[0]?.price
-                    ? formatNum(ngn_usdt[0].price)
+                    : ngn_usdt && ngn_usdt.data && ngn_usdt.data[0]?.price
+                    ? formatNum(ngn_usdt.data[0].price)
                     : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
                   {selectedGateRow
                     ? formatNum(selectedGateRow.price)
-                    : usdt_cny && usdt_cny[0]?.price
-                    ? formatNum(usdt_cny[0].price)
+                    : usdt_cny && usdt_cny.data && usdt_cny.data[0]?.price
+                    ? formatNum(usdt_cny.data[0].price)
                     : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
                     const ngnUsdtPrice = selectedBybitRow
                       ? selectedBybitRow.price
-                      : ngn_usdt && ngn_usdt[0]?.price;
+                      : ngn_usdt && ngn_usdt.data && ngn_usdt.data[0]?.price;
                     const usdtCnyPrice = selectedGateRow
                       ? selectedGateRow.price
-                      : usdt_cny && usdt_cny[0]?.price;
+                      : usdt_cny && usdt_cny.data && usdt_cny.data[0]?.price;
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
                     return rate ? rate.toFixed(4) : "-";
@@ -321,10 +364,10 @@ export default function Home() {
                   {(() => {
                     const ngnUsdtPrice = selectedBybitRow
                       ? selectedBybitRow.price
-                      : ngn_usdt && ngn_usdt[0]?.price;
+                      : ngn_usdt && ngn_usdt.data && ngn_usdt.data[0]?.price;
                     const usdtCnyPrice = selectedGateRow
                       ? selectedGateRow.price
-                      : usdt_cny && usdt_cny[0]?.price;
+                      : usdt_cny && usdt_cny.data && usdt_cny.data[0]?.price;
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const cny = (1_000_000 / ngnUsdtPrice) * usdtCnyPrice;
                     return formatNum(cny);
