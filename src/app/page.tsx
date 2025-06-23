@@ -7,7 +7,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import numeral from "numeral";
 import useSWR, { mutate } from "swr";
 import Link from "next/link";
@@ -63,6 +63,29 @@ export default function Home() {
     return ngnUsdtPrice / usdtCnyPrice;
   }
 
+  // Auto-select first row for Bybit and Gate when data loads and nothing is selected
+  useEffect(() => {
+    if (
+      ngn_usdt &&
+      ngn_usdt.data &&
+      ngn_usdt.data.length > 0 &&
+      !selectedBybitRow
+    ) {
+      setSelectedBybitRow(ngn_usdt.data[0]);
+    }
+  }, [ngn_usdt, selectedBybitRow]);
+
+  useEffect(() => {
+    if (
+      usdt_cny &&
+      usdt_cny.data &&
+      usdt_cny.data.length > 0 &&
+      !selectedGateRow
+    ) {
+      setSelectedGateRow(usdt_cny.data[0]);
+    }
+  }, [usdt_cny, selectedGateRow]);
+
   return (
     <main className="p-4 max-w-6xl mx-auto">
       <div className="overflow-x-auto space-y-8">
@@ -110,8 +133,7 @@ export default function Home() {
               <div className="font-mono whitespace-pre">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                   <span>
-                    Last updated:{" "}
-                    {new Date(ngn_usdt.fetched_at).toLocaleString()}
+                    {"Last updated:".padEnd(13, " ")}{new Date(ngn_usdt.fetched_at).toLocaleString()}
                   </span>
                   <span className="hidden sm:inline mx-1">|</span>
                   <span>
@@ -120,7 +142,7 @@ export default function Home() {
                     })}
                   </span>
                 </div>
-                <div>Time now: {new Date().toLocaleString()}</div>
+                <div>{"Time now:".padEnd(13, " ")}{new Date().toLocaleString()}</div>
               </div>
             ) : (
               <span className="font-mono">Last updated: Unknown</span>
@@ -164,6 +186,7 @@ export default function Home() {
                 ngn_usdt.data
                   .slice(0, rowCount)
                   .sort((a: any, b: any) => b.price - a.price)
+                  .reverse()
                   .map((row: any) => (
                     <TableRow
                       key={row.key}
@@ -238,8 +261,7 @@ export default function Home() {
               <div className="font-mono whitespace-pre">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                   <span>
-                    Last updated:{" "}
-                    {new Date(usdt_cny.fetched_at).toLocaleString()}
+                    {"Last updated:".padEnd(13, " ")}{new Date(usdt_cny.fetched_at).toLocaleString()}
                   </span>
                   <span className="hidden sm:inline mx-1">|</span>
                   <span>
@@ -248,7 +270,7 @@ export default function Home() {
                     })}
                   </span>
                 </div>
-                <div>Time now: {new Date().toLocaleString()}</div>
+                <div>{"Time now:".padEnd(13, " ")}{new Date().toLocaleString()}</div>
               </div>
             ) : (
               <span className="font-mono">Last updated: Unknown</span>
@@ -339,27 +361,15 @@ export default function Home() {
             <TableBody>
               <TableRow>
                 <TableCell className="font-mono">
-                  {selectedBybitRow
-                    ? formatNum(selectedBybitRow.price)
-                    : ngn_usdt && ngn_usdt.data && ngn_usdt.data[0]?.price
-                    ? formatNum(ngn_usdt.data[0].price)
-                    : "-"}
+                  {selectedBybitRow ? formatNum(selectedBybitRow.price) : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
-                  {selectedGateRow
-                    ? formatNum(selectedGateRow.price)
-                    : usdt_cny && usdt_cny.data && usdt_cny.data[0]?.price
-                    ? formatNum(usdt_cny.data[0].price)
-                    : "-"}
+                  {selectedGateRow ? formatNum(selectedGateRow.price) : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
-                    const ngnUsdtPrice = selectedBybitRow
-                      ? selectedBybitRow.price
-                      : ngn_usdt && ngn_usdt.data && ngn_usdt.data[0]?.price;
-                    const usdtCnyPrice = selectedGateRow
-                      ? selectedGateRow.price
-                      : usdt_cny && usdt_cny.data && usdt_cny.data[0]?.price;
+                    const ngnUsdtPrice = selectedBybitRow?.price;
+                    const usdtCnyPrice = selectedGateRow?.price;
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
                     return rate ? rate.toFixed(4) : "-";
@@ -368,12 +378,8 @@ export default function Home() {
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
-                    const ngnUsdtPrice = selectedBybitRow
-                      ? selectedBybitRow.price
-                      : ngn_usdt && ngn_usdt.data && ngn_usdt.data[0]?.price;
-                    const usdtCnyPrice = selectedGateRow
-                      ? selectedGateRow.price
-                      : usdt_cny && usdt_cny.data && usdt_cny.data[0]?.price;
+                    const ngnUsdtPrice = selectedBybitRow?.price;
+                    const usdtCnyPrice = selectedGateRow?.price;
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const cny = (1_000_000 / ngnUsdtPrice) * usdtCnyPrice;
                     return formatNum(cny);
