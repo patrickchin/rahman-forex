@@ -23,26 +23,63 @@ import { formatDistanceToNow } from "date-fns";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+function TableTimeInfo({ fetchedAt }: { fetchedAt?: string }) {
+  const [now, setNow] = React.useState<Date>(new Date());
+
+  React.useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!fetchedAt) {
+    return <span className="font-mono">Last updated: Unknown</span>;
+  }
+  const fetchedDate = new Date(fetchedAt);
+  return (
+    <div className="font-mono whitespace-pre">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+        <span>
+          {"Last updated:".padEnd(14, " ")}
+          {fetchedDate.toLocaleString()}
+        </span>
+        <span className="hidden sm:inline mx-1">|</span>
+        <span>{formatDistanceToNow(fetchedDate, { addSuffix: true })}</span>
+      </div>
+      <div>
+        {"Time now:".padEnd(14, " ")}
+        {now.toLocaleString()}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const {
     data: ngn_usdt,
     isLoading: loadingBybit,
+    isValidating: validatingBybit,
     error: errorBybit,
-  } = useSWR("/api/getLatestBybit", fetcher);
+  } = useSWR("/api/p2p/search/bybit", fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+  });
   const {
     data: binance_cny,
     isLoading: loadingBinance,
+    isValidating: validatingBinance,
     error: errorBinance,
-  } = useSWR("/api/getLatestBinance", fetcher);
+  } = useSWR("/api/p2p/search/binance", fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    revalidateIfStale: false,
+  });
 
   const [selectedBybitRow, setSelectedBybitRow] = useState<any | null>(null);
-  const [selectedBinanceRow, setSelectedBinanceRow] = useState<any | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [selectedBinanceRow, setSelectedBinanceRow] = useState<any | null>(
+    null
+  );
   const [rowCount, setRowCount] = useState(5);
-  const [refreshStatus, setRefreshStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
-  const [refreshError, setRefreshError] = useState<string>("");
 
   function formatNum(val: number | string) {
     const num = Number(val);
@@ -103,6 +140,12 @@ export default function Home() {
                 Open Bybit
               </Link>
             </h2>
+          </div>
+          {/* Info below title and controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+            <div className="text-sm text-muted-foreground">
+              <TableTimeInfo fetchedAt={ngn_usdt?.fetched_at} />
+            </div>
             <div className="flex items-center gap-2">
               <label
                 htmlFor="rowCount"
@@ -125,28 +168,17 @@ export default function Home() {
                   <SelectItem value="20">20</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={loadingBybit || validatingBybit}
+                onClick={async () => {
+                  await mutate("/api/p2p/search/bybit");
+                }}
+              >
+                {(loadingBybit || validatingBybit) ? "Refreshing..." : "Refresh"}
+              </Button>
             </div>
-          </div>
-          {/* Info below title */}
-          <div className="text-sm text-muted-foreground mb-2">
-            {ngn_usdt && ngn_usdt.fetched_at ? (
-              <div className="font-mono whitespace-pre">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                  <span>
-                    {"Last updated:".padEnd(13, " ")}{new Date(ngn_usdt.fetched_at).toLocaleString()}
-                  </span>
-                  <span className="hidden sm:inline mx-1">|</span>
-                  <span>
-                    {formatDistanceToNow(new Date(ngn_usdt.fetched_at), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-                <div>{"Time now:".padEnd(13, " ")}{new Date().toLocaleString()}</div>
-              </div>
-            ) : (
-              <span className="font-mono">Last updated: Unknown</span>
-            )}
           </div>
           <Table>
             <TableHeader>
@@ -223,7 +255,7 @@ export default function Home() {
               Sell USDT - Binance USDT/CNY
               <span className="text-sm font-normal">(Min 1K USDT)</span>
               <Link
-                href="https://p2p.binance.com/en/trade/sell/USDT/CNY"
+                href="https://p2p.binance.com/en/trade/sell/USDT?fiat=CNY"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 underline text-sm font-normal"
@@ -231,6 +263,12 @@ export default function Home() {
                 Open Binance
               </Link>
             </h2>
+          </div>
+          {/* Info below title and controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+            <div className="text-sm text-muted-foreground">
+              <TableTimeInfo fetchedAt={binance_cny?.fetched_at} />
+            </div>
             <div className="flex items-center gap-2">
               <label
                 htmlFor="rowCount"
@@ -253,28 +291,17 @@ export default function Home() {
                   <SelectItem value="20">20</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={loadingBinance || validatingBinance}
+                onClick={async () => {
+                  await mutate("/api/p2p/search/binance");
+                }}
+              >
+                {(loadingBinance || validatingBinance) ? "Refreshing..." : "Refresh"}
+              </Button>
             </div>
-          </div>
-          {/* Info below title */}
-          <div className="text-sm text-muted-foreground mb-2">
-            {binance_cny && binance_cny.fetched_at ? (
-              <div className="font-mono whitespace-pre">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                  <span>
-                    {"Last updated:".padEnd(13, " ")}{new Date(binance_cny.fetched_at).toLocaleString()}
-                  </span>
-                  <span className="hidden sm:inline mx-1">|</span>
-                  <span>
-                    {formatDistanceToNow(new Date(binance_cny.fetched_at), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-                <div>{"Time now:".padEnd(13, " ")}{new Date().toLocaleString()}</div>
-              </div>
-            ) : (
-              <span className="font-mono">Last updated: Unknown</span>
-            )}
           </div>
           <Table>
             <TableHeader>
@@ -304,7 +331,9 @@ export default function Home() {
                     Error loading data
                   </TableCell>
                 </TableRow>
-              ) : !binance_cny || !binance_cny.data || binance_cny.data.length === 0 ? (
+              ) : !binance_cny ||
+                !binance_cny.data ||
+                binance_cny.data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-4">
                     No data
@@ -364,7 +393,9 @@ export default function Home() {
                   {selectedBybitRow ? formatNum(selectedBybitRow.price) : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
-                  {selectedBinanceRow ? formatNum(selectedBinanceRow.price) : "-"}
+                  {selectedBinanceRow
+                    ? formatNum(selectedBinanceRow.price)
+                    : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
@@ -373,7 +404,8 @@ export default function Home() {
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
                     return rate ? rate.toFixed(4) : "-";
-                  })()} NGN
+                  })()}{" "}
+                  NGN
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
@@ -382,7 +414,8 @@ export default function Home() {
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const cny = (1_000_000 / ngnUsdtPrice) * usdtCnyPrice;
                     return formatNum(cny);
-                  })()} CNY
+                  })()}{" "}
+                  CNY
                 </TableCell>
               </TableRow>
               {/* Selected available USDT row */}
@@ -408,49 +441,10 @@ export default function Home() {
               )}
             </TableBody>
           </Table>
-          <div className='text-xs text-gray-500 mt-1'>
+          <div className="text-xs text-gray-500 mt-1">
             (Based on selected row prices or latest available from each table)
           </div>
         </div>
-      </div>
-      <div className="flex pt-8 items-center gap-2 font-mono text-sm">
-        <Button
-          onClick={async () => {
-            setRefreshing(true);
-            setRefreshStatus("idle");
-            setRefreshError("");
-            try {
-              const res = await fetch("/api/refresh-data");
-              const data = await res.json();
-              if (res.ok && data.success) {
-                setRefreshStatus("success");
-                await Promise.all([
-                  mutate("/api/getLatestBybit"),
-                  mutate("/api/getLatestBinance"),
-                ]);
-              } else {
-                setRefreshStatus("error");
-                setRefreshError(data.error || "Unknown error");
-              }
-            } catch (e: any) {
-              setRefreshStatus("error");
-              setRefreshError(e?.message || "Unknown error");
-            } finally {
-              setRefreshing(false);
-              setTimeout(() => setRefreshStatus("idle"), 4000);
-            }
-          }}
-          variant={"outline"}
-          disabled={refreshing}
-        >
-          {refreshing ? "Refreshing..." : "Refresh Data"}
-        </Button>
-        {refreshStatus === "success" && (
-          <div className="text-green-600">Refresh successful!</div>
-        )}
-        {refreshStatus === "error" && (
-          <div className="text-red-600">Refresh failed: {refreshError}</div>
-        )}
       </div>
     </main>
   );
