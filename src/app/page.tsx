@@ -30,13 +30,13 @@ export default function Home() {
     error: errorBybit,
   } = useSWR("/api/getLatestBybit", fetcher);
   const {
-    data: usdt_cny,
-    isLoading: loadingGate,
-    error: errorGate,
-  } = useSWR("/api/getLatestGate", fetcher);
+    data: binance_cny,
+    isLoading: loadingBinance,
+    error: errorBinance,
+  } = useSWR("/api/getLatestBinance", fetcher);
 
   const [selectedBybitRow, setSelectedBybitRow] = useState<any | null>(null);
-  const [selectedGateRow, setSelectedGateRow] = useState<any | null>(null);
+  const [selectedBinanceRow, setSelectedBinanceRow] = useState<any | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [rowCount, setRowCount] = useState(5);
   const [refreshStatus, setRefreshStatus] = useState<
@@ -63,7 +63,7 @@ export default function Home() {
     return ngnUsdtPrice / usdtCnyPrice;
   }
 
-  // Auto-select first row for Bybit and Gate when data loads and nothing is selected
+  // Auto-select first row for Bybit and Binance when data loads and nothing is selected
   useEffect(() => {
     if (
       ngn_usdt &&
@@ -77,14 +77,14 @@ export default function Home() {
 
   useEffect(() => {
     if (
-      usdt_cny &&
-      usdt_cny.data &&
-      usdt_cny.data.length > 0 &&
-      !selectedGateRow
+      binance_cny &&
+      binance_cny.data &&
+      binance_cny.data.length > 0 &&
+      !selectedBinanceRow
     ) {
-      setSelectedGateRow(usdt_cny.data[0]);
+      setSelectedBinanceRow(binance_cny.data[0]);
     }
-  }, [usdt_cny, selectedGateRow]);
+  }, [binance_cny, selectedBinanceRow]);
 
   return (
     <main className="p-4 max-w-6xl mx-auto">
@@ -220,15 +220,15 @@ export default function Home() {
         <div>
           <div className="flex items-center justify-between mb-2 gap-2">
             <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
-              Sell USDT - Gate USDT/CNY
+              Sell USDT - Binance USDT/CNY
               <span className="text-sm font-normal">(Min 1K USDT)</span>
               <Link
-                href="https://www.gate.com/p2p/sell/USDT-CNY"
+                href="https://p2p.binance.com/en/trade/sell/USDT/CNY"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 underline text-sm font-normal"
               >
-                Open Gate
+                Open Binance
               </Link>
             </h2>
             <div className="flex items-center gap-2">
@@ -257,15 +257,15 @@ export default function Home() {
           </div>
           {/* Info below title */}
           <div className="text-sm text-muted-foreground mb-2">
-            {usdt_cny && usdt_cny.fetched_at ? (
+            {binance_cny && binance_cny.fetched_at ? (
               <div className="font-mono whitespace-pre">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                   <span>
-                    {"Last updated:".padEnd(13, " ")}{new Date(usdt_cny.fetched_at).toLocaleString()}
+                    {"Last updated:".padEnd(13, " ")}{new Date(binance_cny.fetched_at).toLocaleString()}
                   </span>
                   <span className="hidden sm:inline mx-1">|</span>
                   <span>
-                    {formatDistanceToNow(new Date(usdt_cny.fetched_at), {
+                    {formatDistanceToNow(new Date(binance_cny.fetched_at), {
                       addSuffix: true,
                     })}
                   </span>
@@ -292,35 +292,35 @@ export default function Home() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loadingGate ? (
+              {loadingBinance ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-4">
                     Loading...
                   </TableCell>
                 </TableRow>
-              ) : errorGate ? (
+              ) : errorBinance ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-4">
                     Error loading data
                   </TableCell>
                 </TableRow>
-              ) : !usdt_cny || !usdt_cny.data || usdt_cny.data.length === 0 ? (
+              ) : !binance_cny || !binance_cny.data || binance_cny.data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-4">
                     No data
                   </TableCell>
                 </TableRow>
               ) : (
-                usdt_cny.data
+                binance_cny.data
                   .slice(0, rowCount)
                   .sort((a: any, b: any) => b.price - a.price)
                   .map((row: any) => (
                     <TableRow
                       key={row.key}
                       className={`cursor-pointer hover:bg-gray-100 ${
-                        selectedGateRow?.key === row.key ? "bg-blue-100" : ""
+                        selectedBinanceRow?.key === row.key ? "bg-blue-100" : ""
                       }`}
-                      onClick={() => setSelectedGateRow(row)}
+                      onClick={() => setSelectedBinanceRow(row)}
                     >
                       <TableCell>{row.name}</TableCell>
                       <TableCell className="text-right font-mono">
@@ -364,31 +364,29 @@ export default function Home() {
                   {selectedBybitRow ? formatNum(selectedBybitRow.price) : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
-                  {selectedGateRow ? formatNum(selectedGateRow.price) : "-"}
+                  {selectedBinanceRow ? formatNum(selectedBinanceRow.price) : "-"}
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
                     const ngnUsdtPrice = selectedBybitRow?.price;
-                    const usdtCnyPrice = selectedGateRow?.price;
+                    const usdtCnyPrice = selectedBinanceRow?.price;
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const rate = getConversionRate(ngnUsdtPrice, usdtCnyPrice);
                     return rate ? rate.toFixed(4) : "-";
-                  })()}{" "}
-                  NGN
+                  })()} NGN
                 </TableCell>
                 <TableCell className="font-mono">
                   {(() => {
                     const ngnUsdtPrice = selectedBybitRow?.price;
-                    const usdtCnyPrice = selectedGateRow?.price;
+                    const usdtCnyPrice = selectedBinanceRow?.price;
                     if (!ngnUsdtPrice || !usdtCnyPrice) return "-";
                     const cny = (1_000_000 / ngnUsdtPrice) * usdtCnyPrice;
                     return formatNum(cny);
-                  })()}{" "}
-                  CNY
+                  })()} CNY
                 </TableCell>
               </TableRow>
               {/* Selected available USDT row */}
-              {selectedBybitRow && selectedGateRow && (
+              {selectedBybitRow && selectedBinanceRow && (
                 <TableRow>
                   <TableCell className="font-mono font-semibold" colSpan={2}>
                     Max Available
@@ -397,10 +395,10 @@ export default function Home() {
                     {(() => {
                       const usdt = Math.min(
                         selectedBybitRow.available,
-                        selectedGateRow.available
+                        selectedBinanceRow.available
                       );
                       const ngn = usdt * selectedBybitRow.price;
-                      const cny = usdt * selectedGateRow.price;
+                      const cny = usdt * selectedBinanceRow.price;
                       return `${formatNum(usdt)} USDT = ${formatNum(
                         ngn
                       )} NGN = ${formatNum(cny)} CNY`;
@@ -410,9 +408,8 @@ export default function Home() {
               )}
             </TableBody>
           </Table>
-          <div className="text-xs text-gray-500 mt-1">
-            (Based on selected rows&apos; prices or latest available from each
-            table)
+          <div className='text-xs text-gray-500 mt-1'>
+            (Based on selected row prices or latest available from each table)
           </div>
         </div>
       </div>
@@ -429,7 +426,7 @@ export default function Home() {
                 setRefreshStatus("success");
                 await Promise.all([
                   mutate("/api/getLatestBybit"),
-                  mutate("/api/getLatestGate"),
+                  mutate("/api/getLatestBinance"),
                 ]);
               } else {
                 setRefreshStatus("error");
