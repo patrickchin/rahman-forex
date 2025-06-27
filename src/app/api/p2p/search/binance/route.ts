@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 // Binance P2P API endpoint for selling USDT for CNY
@@ -35,13 +34,12 @@ export async function GET() {
         price: Number(adv.price),
         min: Number(adv.minSingleTransAmount),
         max: Number(adv.maxSingleTransAmount),
-        available: Number(adv.availableAmount),
+        available: Number(adv.surplusAmount),
       };
     });
     return NextResponse.json({
       data: result,
       fetched_at: new Date().toISOString(),
-      raw: data,
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 });
