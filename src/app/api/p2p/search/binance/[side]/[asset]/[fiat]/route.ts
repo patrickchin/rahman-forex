@@ -3,15 +3,25 @@ import { NextResponse } from 'next/server';
 // Binance P2P API endpoint for selling USDT for CNY
 const BINANCE_P2P_URL = 'https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search';
 
-export async function GET() {
+// Route: /api/p2p/search/binance/[side]/[asset]/[fiat]/route.ts
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ side?: string; asset?: string; fiat?: string }> }
+) {
   try {
+    // Await params for Next.js dynamic API routes
+    const paramsObj = await context.params;
+    const side = paramsObj.side?.toUpperCase() || 'SELL';
+    const asset = paramsObj.asset?.toUpperCase() || 'USDT';
+    const fiat = paramsObj.fiat?.toUpperCase() || 'CNY';
+    // Binance: tradeType is 'BUY' or 'SELL'
     const body = {
       page: 1,
       rows: 20,
       payTypes: [],
-      asset: 'USDT',
-      tradeType: 'SELL',
-      fiat: 'CNY',
+      asset,
+      tradeType: side,
+      fiat,
       publisherType: null,
     };
     const response = await fetch(BINANCE_P2P_URL, {

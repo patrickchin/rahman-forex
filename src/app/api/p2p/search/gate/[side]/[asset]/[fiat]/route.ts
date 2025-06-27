@@ -2,9 +2,20 @@ import { NextResponse } from "next/server";
 
 const GATE_P2P_URL = 'https://www.gate.com/json_svr/query_push/';
 
-export async function GET() {
+// Route: /api/p2p/search/gate/[side]/[asset]/[fiat]/route.ts
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ side?: string; asset?: string; fiat?: string }> }
+) {
   try {
-    const symbol = 'USDT_CNY';
+    // Await params for Next.js dynamic API routes
+    const paramsObj = await context.params;
+    const side = paramsObj.side?.toUpperCase() || 'SELL';
+    const asset = paramsObj.asset?.toUpperCase() || 'USDT';
+    const fiat = paramsObj.fiat?.toUpperCase() || 'CNY';
+    // Gate uses 'BUY' for SELL side and 'SELL' for BUY side
+    let push_type = side === 'SELL' ? 'BUY' : 'SELL';
+    const symbol = `${asset}_${fiat}`;
     const params = new URLSearchParams({
       type: 'push_order_list',
       symbol,
@@ -19,7 +30,7 @@ export async function GET() {
       no_query_hide: '0',
       remove_limit: '0',
       per_page: '20',
-      push_type: 'BUY', // Gate uses 'BUY' for SELL side
+      push_type, // Gate uses 'BUY' for SELL side
       sort_type: '1',
       page: '1',
     });
@@ -49,9 +60,9 @@ export async function GET() {
         min: Number(min),
         max: Number(max),
         available: Number(ad.amount),
-        currency: ad.curr_a || 'USDT',
+        currency: ad.curr_a || asset,
         payment: ad.pay_type_num || '',
-        side: ad.type ? ad.type.toUpperCase() : 'SELL',
+        side: ad.type ? ad.type.toUpperCase() : side,
         key: ad.oid || ad.uid || ad.username || idx,
       };
     });

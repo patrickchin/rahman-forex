@@ -2,14 +2,25 @@ import { NextResponse } from "next/server";
 
 const BYBIT_P2P_URL = "https://api2.bybit.com/fiat/otc/item/online";
 
-export async function GET() {
+// Route: /api/p2p/search/bybit/[side]/[asset]/[fiat]/route.ts
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ side?: string; asset?: string; fiat?: string }> }
+) {
   try {
+    // Await params for Next.js dynamic API routes
+    const paramsObj = await context.params;
+    const side = paramsObj.side?.toUpperCase() || 'BUY';
+    const asset = paramsObj.asset?.toUpperCase() || 'USDT';
+    const fiat = paramsObj.fiat?.toUpperCase() || 'NGN';
+    // Bybit: side '1' = BUY, '0' = SELL
+    let sideVal = side === 'SELL' ? '0' : '1';
     const payload = {
       userId: '',
-      tokenId: 'USDT',
-      currencyId: 'NGN',
+      tokenId: asset,
+      currencyId: fiat,
       payment: [],
-      side: '1', // '1' = BUY, string type as in fetchBybitP2pItems
+      side: sideVal, // '1' = BUY, '0' = SELL
       size: '20',
       page: '1',
       amount: '1000000',
@@ -47,7 +58,7 @@ export async function GET() {
       min: Number(ad.minAmount),
       max: Number(ad.maxAmount),
       available: Number(ad.lastQuantity),
-      currency: ad.currencyId || "NGN",
+      currency: ad.currencyId || fiat,
       payment: Array.isArray(ad.payments) ? ad.payments.join(", ") : "",
       side: ad.side === 1 ? "BUY" : "SELL",
       key: ad.id || ad.userId || ad.accountId || ad.createDate || idx,
