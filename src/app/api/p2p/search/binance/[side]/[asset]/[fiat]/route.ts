@@ -11,6 +11,9 @@ export async function GET(
   try {
     // Await params for Next.js dynamic API routes
     const paramsObj = await context.params;
+    const { searchParams } = new URL(req.url);
+    const minAmount = searchParams.get('minAmount') || '0';
+    
     const side = paramsObj.side?.toUpperCase() || 'SELL';
     const asset = paramsObj.asset?.toUpperCase() || 'USDT';
     const fiat = paramsObj.fiat?.toUpperCase() || 'CNY';
@@ -23,6 +26,7 @@ export async function GET(
       tradeType: side,
       fiat,
       publisherType: null,
+      transAmount: minAmount,
     };
     const response = await fetch(BINANCE_P2P_URL, {
       method: 'POST',

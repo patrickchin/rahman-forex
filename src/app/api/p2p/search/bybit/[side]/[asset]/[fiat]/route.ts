@@ -8,22 +8,22 @@ export async function GET(
   context: { params: Promise<{ side?: string; asset?: string; fiat?: string }> }
 ) {
   try {
-    // Await params for Next.js dynamic API routes
     const paramsObj = await context.params;
+    const { searchParams } = new URL(req.url);
+    const minAmount = searchParams.get('minAmount');
+    
     const side = paramsObj.side?.toUpperCase() || 'BUY';
     const asset = paramsObj.asset?.toUpperCase() || 'USDT';
     const fiat = paramsObj.fiat?.toUpperCase() || 'NGN';
-    // Bybit: side '1' = BUY, '0' = SELL
-    let sideVal = side === 'SELL' ? '0' : '1';
     const payload = {
       userId: '',
       tokenId: asset,
       currencyId: fiat,
       payment: [],
-      side: sideVal, // '1' = BUY, '0' = SELL
+      side: side === 'SELL' ? '0' : '1', // '1' = BUY, '0' = SELL
       size: '20',
       page: '1',
-      amount: '1000000',
+      amount: minAmount || '',
       vaMaker: false,
       bulkMaker: false,
       canTrade: true,

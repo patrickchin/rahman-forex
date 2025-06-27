@@ -10,17 +10,17 @@ export async function GET(
   try {
     // Await params for Next.js dynamic API routes
     const paramsObj = await context.params;
+    const { searchParams } = new URL(req.url);
+    const minAmount = searchParams.get('minAmount') || '0';
+    
     const side = paramsObj.side?.toUpperCase() || 'SELL';
     const asset = paramsObj.asset?.toUpperCase() || 'USDT';
     const fiat = paramsObj.fiat?.toUpperCase() || 'CNY';
-    // Gate uses 'BUY' for SELL side and 'SELL' for BUY side
-    let push_type = side === 'SELL' ? 'BUY' : 'SELL';
-    const symbol = `${asset}_${fiat}`;
     const params = new URLSearchParams({
       type: 'push_order_list',
-      symbol,
+      symbol: `${asset}_${fiat}`,
       big_trade: '0',
-      fiat_amount: '',
+      fiat_amount: minAmount,
       amount: '1000',
       pay_type: '',
       is_blue: '0',
@@ -30,7 +30,7 @@ export async function GET(
       no_query_hide: '0',
       remove_limit: '0',
       per_page: '20',
-      push_type, // Gate uses 'BUY' for SELL side
+      push_type: side === 'SELL' ? 'BUY' : 'SELL', // Gate uses 'BUY' for SELL side
       sort_type: '1',
       page: '1',
     });

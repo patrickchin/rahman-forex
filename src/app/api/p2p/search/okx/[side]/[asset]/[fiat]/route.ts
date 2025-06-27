@@ -11,6 +11,9 @@ export async function GET(
   try {
     // Await params for Next.js dynamic API routes
     const paramsObj = await context.params;
+    const { searchParams } = new URL(req.url);
+    const minAmount = searchParams.get('minAmount') || '0';
+    
     const side = paramsObj.side?.toUpperCase() || 'SELL';
     const asset = paramsObj.asset?.toUpperCase() || 'USDT';
     const fiat = paramsObj.fiat?.toUpperCase() || 'CNY';
@@ -30,6 +33,7 @@ export async function GET(
       sortOrder: 'desc',
       limit: '20',
       offset: '0',
+      ...(minAmount && minAmount !== '0' && { minAmount }),
     });
     const response = await fetch(`${OKX_P2P_URL}?${params.toString()}`);
     if (!response.ok) {
@@ -37,7 +41,6 @@ export async function GET(
     }
     const data = await response.json();
     const items = data?.data[okxSide] || [];
-    console.log('OKX P2P data:', items[0]);
     // Map OKX ads to unified type
     const mappedItems = items.map((ad: any, idx: number) => {
       return {
