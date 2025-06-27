@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { EXCHANGE_CONFIGS } from "@/lib/constants";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -72,6 +72,8 @@ export default function TradingPage({ params }: Props) {
   } | null>(null);
 
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [selectedBuyRow, setSelectedBuyRow] = useState<any | null>(null);
   const [selectedSellRow, setSelectedSellRow] = useState<any | null>(null);
   const [buyRowCount, setBuyRowCount] = useState(5);
@@ -92,6 +94,15 @@ export default function TradingPage({ params }: Props) {
   // Minimum amount configuration from search params or defaults
   const MIN_BUY_AMOUNT = searchParams.get("minbuy") || "0"; // Default 0
   const MIN_SELL_AMOUNT = searchParams.get("minsell") || "0"; // Default 0
+
+  // Function to handle exchange changes
+  const handleExchangeChange = (exchangeType: "buyex" | "sellex") => {
+    return async (value: string) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.set(exchangeType, value);
+      router.push(`${pathname}?${newSearchParams.toString()}`);
+    };
+  };
 
   // Get exchange configurations from search params
   const BUY_EXCHANGE =
@@ -190,10 +201,36 @@ export default function TradingPage({ params }: Props) {
 
   return (
     <main className="p-4 max-w-6xl mx-auto space-y-12">
+      <div className="mb-4">
+        <Link href="/" className="text-blue-600 hover:underline text-sm">
+          ← Back to Home
+        </Link>
+      </div>
+
       <div>
         <div className="flex items-center justify-between mb-2 gap-2">
-          <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
-            Buy {BASE_CURRENCY} - {BUY_EXCHANGE.name} {BASE_CURRENCY}/{BUY_FIAT}
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
+              Buy {BASE_CURRENCY} - {BUY_EXCHANGE.name} {BASE_CURRENCY}/
+              {BUY_FIAT}
+            </h2>
+            <div className="flex items-center gap-2">
+              <Select
+                value={BUY_EXCHANGE_KEY}
+                onValueChange={handleExchangeChange("buyex")}
+              >
+                <SelectTrigger id="buyExchange" className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(EXCHANGE_CONFIGS).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>
+                      {config.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>{" "}
             <span className="text-sm font-normal">
               (Min {MIN_BUY_AMOUNT} {BUY_FIAT})
             </span>
@@ -205,7 +242,7 @@ export default function TradingPage({ params }: Props) {
             >
               Open {BUY_EXCHANGE.name}
             </Link>
-          </h2>
+          </div>
         </div>
         {/* Info below title and controls */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
@@ -329,9 +366,28 @@ export default function TradingPage({ params }: Props) {
       </div>
       <div>
         <div className="flex items-center justify-between mb-2 gap-2">
-          <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
-            Sell {BASE_CURRENCY} - {SELL_EXCHANGE.name} {BASE_CURRENCY}/
-            {SELL_FIAT}
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
+              Sell {BASE_CURRENCY} - {SELL_EXCHANGE.name} {BASE_CURRENCY}/
+              {SELL_FIAT}
+            </h2>
+            <div className="flex items-center gap-2">
+              <Select
+                value={SELL_EXCHANGE_KEY}
+                onValueChange={handleExchangeChange("sellex")}
+              >
+                <SelectTrigger id="sellExchange" className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(EXCHANGE_CONFIGS).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>
+                      {config.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <span className="text-sm font-normal">
               (Min {MIN_SELL_AMOUNT} {BASE_CURRENCY})
             </span>
@@ -343,7 +399,7 @@ export default function TradingPage({ params }: Props) {
             >
               Open {SELL_EXCHANGE.name}
             </Link>
-          </h2>
+          </div>
         </div>
         {/* Info below title and controls */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
