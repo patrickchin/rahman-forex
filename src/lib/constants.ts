@@ -11,22 +11,16 @@ export const EXCHANGE_CONFIGS = {
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
       `https://p2p.binance.com/en/trade/${side}/${asset.toUpperCase()}?fiat=${fiat.toUpperCase()}`,
   },
-  KUCOIN: {
-    name: "KuCoin",
-    id: "kucoin",
-    url: (asset: string, fiat: string, side: "buy" | "sell") =>
-      `https://www.kucoin.com/otc/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
-  },
   OKX: {
     name: "OKX",
     id: "okx",
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
-      `https://www.okx.com/p2p/ads-merchant?side=${side}&cryptoCurrency=${asset.toLowerCase()}&fiatCurrency=${fiat.toLowerCase()}`,
+      `https://www.okx.com/p2p-markets/${fiat.toLowerCase()}/${side}-${asset.toLowerCase()}`,
   },
   GATE: {
-    name: "Gate.io",
+    name: "Gate",
     id: "gate",
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
-      `https://www.gate.io/otc?side=${side}&currency=${asset.toUpperCase()}&fiat=${fiat.toUpperCase()}`,
+      `https://www.gate.com/p2p/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
   },
 };

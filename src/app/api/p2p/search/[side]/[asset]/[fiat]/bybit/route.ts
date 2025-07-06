@@ -10,11 +10,13 @@ export async function GET(
   try {
     const paramsObj = await context.params;
     const { searchParams } = new URL(req.url);
-    const minAmount = searchParams.get('minAmount');
+    const fiatAmount = searchParams.get('fiatAmount') || '';
     
     const side = paramsObj.side?.toUpperCase() || 'BUY';
     const asset = paramsObj.asset?.toUpperCase() || 'USDT';
     const fiat = paramsObj.fiat?.toUpperCase() || 'NGN';
+    // Bybit: amount refers to the fiat amount based on API structure (currencyId vs tokenId)
+    const amount = fiatAmount || '';
     const payload = {
       userId: '',
       tokenId: asset,
@@ -23,7 +25,7 @@ export async function GET(
       side: side === 'SELL' ? '0' : '1', // '1' = BUY, '0' = SELL
       size: '20',
       page: '1',
-      amount: minAmount || '',
+      amount,
       vaMaker: false,
       bulkMaker: false,
       canTrade: true,

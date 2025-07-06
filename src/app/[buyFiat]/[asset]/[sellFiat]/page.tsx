@@ -89,7 +89,7 @@ export default function TradingPage({ params }: Props) {
   const BASE_CURRENCY = resolvedParams?.asset.toUpperCase() || "USDT";
   const SELL_FIAT = resolvedParams?.sellFiat.toUpperCase() || "CNY";
   const BUY_EXCHANGE_KEY = searchParams.get("buyex") || "BYBIT";
-  const SELL_EXCHANGE_KEY = searchParams.get("sellex") || "OKX";
+  const SELL_EXCHANGE_KEY = searchParams.get("sellex") || "BYBIT";
 
   // Minimum amount configuration from search params or defaults
   const MIN_BUY_AMOUNT = searchParams.get("minbuy") || "0"; // Default 0
@@ -110,7 +110,7 @@ export default function TradingPage({ params }: Props) {
     EXCHANGE_CONFIGS.BYBIT;
   const SELL_EXCHANGE =
     EXCHANGE_CONFIGS[SELL_EXCHANGE_KEY as keyof typeof EXCHANGE_CONFIGS] ||
-    EXCHANGE_CONFIGS.OKX;
+    EXCHANGE_CONFIGS.BYBIT;
 
   const {
     data: buyData,
@@ -119,11 +119,9 @@ export default function TradingPage({ params }: Props) {
     error: errorBuy,
   } = useSWR(
     resolvedParams
-      ? `/api/p2p/search/${
-          BUY_EXCHANGE.id
-        }/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}${
+      ? `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${BUY_EXCHANGE.id}${
           MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
-            ? `?minAmount=${MIN_BUY_AMOUNT}`
+            ? `?fiatAmount=${MIN_BUY_AMOUNT}`
             : ""
         }`
       : null,
@@ -141,11 +139,9 @@ export default function TradingPage({ params }: Props) {
     error: errorSell,
   } = useSWR(
     resolvedParams
-      ? `/api/p2p/search/${
-          SELL_EXCHANGE.id
-        }/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}${
+      ? `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${SELL_EXCHANGE.id}${
           MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
-            ? `?minAmount=${MIN_SELL_AMOUNT}`
+            ? `?fiatAmount=${MIN_SELL_AMOUNT}`
             : ""
         }`
       : null,
@@ -276,15 +272,12 @@ export default function TradingPage({ params }: Props) {
               variant="outline"
               disabled={loadingBuy || validatingBuy}
               onClick={async () => {
-                await mutate(
-                  `/api/p2p/search/${
-                    BUY_EXCHANGE.id
-                  }/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}${
-                    MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
-                      ? `?minAmount=${MIN_BUY_AMOUNT}`
-                      : ""
-                  }`
-                );
+                const url = `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${BUY_EXCHANGE.id}${
+                  MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
+                    ? `?fiatAmount=${MIN_BUY_AMOUNT}`
+                    : ""
+                }`;
+                await mutate(url);
               }}
             >
               {loadingBuy || validatingBuy ? "Refreshing..." : "Refresh"}
@@ -294,6 +287,7 @@ export default function TradingPage({ params }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-32">Exchange</TableHead>
               <TableHead className="w-96">Name</TableHead>
               <TableHead className="text-right w-36">Buy Price</TableHead>
               <TableHead className="text-right w-36">
@@ -313,19 +307,19 @@ export default function TradingPage({ params }: Props) {
           <TableBody>
             {loadingBuy ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center p-4">
+                <TableCell colSpan={7} className="text-center p-4">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : errorBuy ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center p-4">
+                <TableCell colSpan={7} className="text-center p-4">
                   Error loading data
                 </TableCell>
               </TableRow>
             ) : !buyData || !buyData.data || buyData.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center p-4">
+                <TableCell colSpan={7} className="text-center p-4">
                   No data
                 </TableCell>
               </TableRow>
@@ -342,6 +336,9 @@ export default function TradingPage({ params }: Props) {
                     }`}
                     onClick={() => setSelectedBuyRow(row)}
                   >
+                    <TableCell className="text-xs">
+                      {BUY_EXCHANGE.name.toUpperCase()}
+                    </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
                       {formatNum(row.price)}
@@ -433,15 +430,12 @@ export default function TradingPage({ params }: Props) {
               variant="outline"
               disabled={loadingSell || validatingSell}
               onClick={async () => {
-                await mutate(
-                  `/api/p2p/search/${
-                    SELL_EXCHANGE.id
-                  }/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}${
-                    MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
-                      ? `?minAmount=${MIN_SELL_AMOUNT}`
-                      : ""
-                  }`
-                );
+                const url = `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${SELL_EXCHANGE.id}${
+                  MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
+                    ? `?fiatAmount=${MIN_SELL_AMOUNT}`
+                    : ""
+                }`;
+                await mutate(url);
               }}
             >
               {loadingSell || validatingSell ? "Refreshing..." : "Refresh"}
@@ -451,6 +445,7 @@ export default function TradingPage({ params }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-32">Exchange</TableHead>
               <TableHead className="w-96">Name</TableHead>
               <TableHead className="text-right w-36">Sell Price</TableHead>
               <TableHead className="text-right w-36">
@@ -470,19 +465,19 @@ export default function TradingPage({ params }: Props) {
           <TableBody>
             {loadingSell ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center p-4">
+                <TableCell colSpan={7} className="text-center p-4">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : errorSell ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center p-4">
+                <TableCell colSpan={7} className="text-center p-4">
                   Error loading data
                 </TableCell>
               </TableRow>
             ) : !sellData || !sellData.data || sellData.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center p-4">
+                <TableCell colSpan={7} className="text-center p-4">
                   No data
                 </TableCell>
               </TableRow>
@@ -498,6 +493,9 @@ export default function TradingPage({ params }: Props) {
                     }`}
                     onClick={() => setSelectedSellRow(row)}
                   >
+                    <TableCell className="text-xs">
+                      {SELL_EXCHANGE.name.toUpperCase()}
+                    </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
                       {formatNum(row.price)}
