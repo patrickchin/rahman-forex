@@ -45,6 +45,7 @@ export async function GET(
       body: params.toString(),
     });
     if (!response.ok) {
+      console.log(response.status, response.statusText);
       return NextResponse.json(
         { error: "Failed to fetch Gate P2P data" },
         { status: 500 }
