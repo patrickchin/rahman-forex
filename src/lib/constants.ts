@@ -28,4 +28,4 @@ export const EXCHANGE_CONFIGS = {
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
       `https://www.gate.com/p2p/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
   },
-};
+} as const;

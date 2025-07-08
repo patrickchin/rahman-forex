@@ -27,7 +27,9 @@ export async function GET(
     
     // Fetch data from all exchanges concurrently
     const fetchPromises = exchangesToFetch.map(async (exchangeKey) => {
-      const exchangeId = EXCHANGE_CONFIGS[exchangeKey as keyof typeof EXCHANGE_CONFIGS].id;
+      const exchangeConfig = EXCHANGE_CONFIGS[exchangeKey as keyof typeof EXCHANGE_CONFIGS];
+      const exchangeId = exchangeConfig.id;
+      const exchangeName = exchangeConfig.name;
       const apiUrl = `${baseUrl}/api/p2p/search/${side}/${asset}/${fiat}/${exchangeId}${queryParams}`;
       
       try {
@@ -42,6 +44,7 @@ export async function GET(
           console.warn(`Failed to fetch from ${exchangeId}: ${response.status} ${response.statusText}`);
           return {
             exchange: exchangeId,
+            exchangeName: exchangeName,
             data: [],
             error: `HTTP ${response.status}: ${response.statusText}`,
             fetched_at: new Date().toISOString(),
@@ -51,6 +54,7 @@ export async function GET(
         const data = await response.json();
         return {
           exchange: exchangeId,
+          exchangeName: exchangeName,
           data: data.data || [],
           fetched_at: data.fetched_at || new Date().toISOString(),
           error: data.error || null,
@@ -59,6 +63,7 @@ export async function GET(
         console.warn(`Error fetching from ${exchangeId}:`, error.message);
         return {
           exchange: exchangeId,
+          exchangeName: exchangeName,
           data: [],
           error: error.message || 'Unknown error',
           fetched_at: new Date().toISOString(),
@@ -85,15 +90,18 @@ export async function GET(
           const dataWithExchange = exchangeResult.data.map((item: any) => ({
             ...item,
             exchange: exchangeResult.exchange,
+            exchangeName: exchangeResult.exchangeName,
             key: `${exchangeResult.exchange}-${item.key || item.userId || Math.random()}`,
           }));
           allData.push(...dataWithExchange);
         }
       } else {
-        const exchangeId = exchangesToFetch[index];
-        console.warn(`Promise rejected for ${exchangeId}:`, result.reason);
+        const exchangeKey = exchangesToFetch[index];
+        const exchangeConfig = EXCHANGE_CONFIGS[exchangeKey as keyof typeof EXCHANGE_CONFIGS];
+        console.warn(`Promise rejected for ${exchangeConfig.id}:`, result.reason);
         exchangeResults.push({
-          exchange: exchangeId,
+          exchange: exchangeConfig.id,
+          exchangeName: exchangeConfig.name,
           data: [],
           error: result.reason?.message || 'Promise rejected',
           fetched_at: new Date().toISOString(),

@@ -119,11 +119,9 @@ export default function TradingPage({ params }: Props) {
     error: errorBuy,
   } = useSWR(
     resolvedParams
-      ? `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${BUY_EXCHANGE.id}${
-          MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
-            ? `?fiatAmount=${MIN_BUY_AMOUNT}`
-            : ""
-        }`
+      ? `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${
+          BUY_EXCHANGE.id
+        }${MIN_BUY_AMOUNT && `?fiatAmount=${MIN_BUY_AMOUNT}`}`
       : null,
     fetcher,
     {
@@ -139,11 +137,9 @@ export default function TradingPage({ params }: Props) {
     error: errorSell,
   } = useSWR(
     resolvedParams
-      ? `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${SELL_EXCHANGE.id}${
-          MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
-            ? `?fiatAmount=${MIN_SELL_AMOUNT}`
-            : ""
-        }`
+      ? `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${
+          SELL_EXCHANGE.id
+        }${MIN_SELL_AMOUNT && `?fiatAmount=${MIN_SELL_AMOUNT}`}`
       : null,
     fetcher,
     {
@@ -195,6 +191,35 @@ export default function TradingPage({ params }: Props) {
     return buyFiatPrice / sellFiatPrice;
   }
 
+  function formatConversionRate() {
+    const buyFiatPrice = selectedBuyRow?.price;
+    const sellFiatPrice = selectedSellRow?.price;
+    if (!buyFiatPrice || !sellFiatPrice) return "-";
+    const rate = getConversionRate(buyFiatPrice, sellFiatPrice);
+    return rate ? rate.toFixed(4) : "-";
+  }
+
+  function formatLargeConversion() {
+    const buyFiatPrice = selectedBuyRow?.price;
+    const sellFiatPrice = selectedSellRow?.price;
+    if (!buyFiatPrice || !sellFiatPrice) return "-";
+    const convertedAmount = (1_000_000 / buyFiatPrice) * sellFiatPrice;
+    return formatNum(convertedAmount);
+  }
+
+  function formatMaxAvailable() {
+    if (!selectedBuyRow || !selectedSellRow) return "";
+    const maxAsset = Math.min(
+      selectedBuyRow.available,
+      selectedSellRow.available
+    );
+    const buyFiatAmount = maxAsset * selectedBuyRow.price;
+    const sellFiatAmount = maxAsset * selectedSellRow.price;
+    return `${formatNum(maxAsset)} ${BASE_CURRENCY} = ${formatNum(
+      buyFiatAmount
+    )} ${BUY_FIAT} = ${formatNum(sellFiatAmount)} ${SELL_FIAT}`;
+  }
+
   return (
     <main className="p-4 max-w-6xl mx-auto space-y-12">
       <div className="mb-4 flex items-center justify-between">
@@ -204,22 +229,24 @@ export default function TradingPage({ params }: Props) {
         <Button
           size="sm"
           variant="outline"
-          disabled={loadingBuy || validatingBuy || loadingSell || validatingSell}
+          disabled={
+            loadingBuy || validatingBuy || loadingSell || validatingSell
+          }
           onClick={async () => {
-            const buyUrl = `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${BUY_EXCHANGE.id}${
-              MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
-                ? `?fiatAmount=${MIN_BUY_AMOUNT}`
-                : ""
-            }`;
-            const sellUrl = `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${SELL_EXCHANGE.id}${
-              MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
-                ? `?fiatAmount=${MIN_SELL_AMOUNT}`
-                : ""
+            const buyUrl = `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${
+              BUY_EXCHANGE.id
+            }${MIN_BUY_AMOUNT !== "0" ? `?fiatAmount=${MIN_BUY_AMOUNT}` : ""}`;
+            const sellUrl = `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${
+              SELL_EXCHANGE.id
+            }${
+              MIN_SELL_AMOUNT !== "0" ? `?fiatAmount=${MIN_SELL_AMOUNT}` : ""
             }`;
             await Promise.all([mutate(buyUrl), mutate(sellUrl)]);
           }}
         >
-          {loadingBuy || validatingBuy || loadingSell || validatingSell ? "Refreshing..." : "Refresh All"}
+          {loadingBuy || validatingBuy || loadingSell || validatingSell
+            ? "Refreshing..."
+            : "Refresh"}
         </Button>
       </div>
 
@@ -266,9 +293,7 @@ export default function TradingPage({ params }: Props) {
             <TableTimeInfo fetchedAt={buyData?.fetched_at} />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium self-center">
-              Rows:
-            </label>
+            <label className="text-sm font-medium self-center">Rows:</label>
             <div className="flex gap-1">
               {[1, 3, 5, 10, 20].map((count) => (
                 <Button
@@ -336,7 +361,7 @@ export default function TradingPage({ params }: Props) {
                     onClick={() => setSelectedBuyRow(row)}
                   >
                     <TableCell className="text-xs">
-                      {row.exchange || BUY_EXCHANGE.name}
+                      {(row.exchange || BUY_EXCHANGE.name).toUpperCase()}
                     </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
@@ -403,9 +428,7 @@ export default function TradingPage({ params }: Props) {
             <TableTimeInfo fetchedAt={sellData?.fetched_at} />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium self-center">
-              Rows:
-            </label>
+            <label className="text-sm font-medium self-center">Rows:</label>
             <div className="flex gap-1">
               {[1, 3, 5, 10, 20].map((count) => (
                 <Button
@@ -472,7 +495,7 @@ export default function TradingPage({ params }: Props) {
                     onClick={() => setSelectedSellRow(row)}
                   >
                     <TableCell className="text-xs">
-                      {row.exchange || SELL_EXCHANGE.name}
+                      {(row.exchange || SELL_EXCHANGE.name).toUpperCase()}
                     </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
@@ -521,31 +544,16 @@ export default function TradingPage({ params }: Props) {
           <TableBody>
             <TableRow>
               <TableCell className="font-mono">
-                {selectedBuyRow ? formatNum(selectedBuyRow.price) : "-"}
+                {(selectedBuyRow && formatNum(selectedBuyRow.price)) || "-"}
               </TableCell>
               <TableCell className="font-mono">
-                {selectedSellRow ? formatNum(selectedSellRow.price) : "-"}
+                {(selectedSellRow && formatNum(selectedSellRow.price)) || "-"}
               </TableCell>
               <TableCell className="font-mono">
-                {(() => {
-                  const buyFiatPrice = selectedBuyRow?.price;
-                  const sellFiatPrice = selectedSellRow?.price;
-                  if (!buyFiatPrice || !sellFiatPrice) return "-";
-                  const rate = getConversionRate(buyFiatPrice, sellFiatPrice);
-                  return rate ? rate.toFixed(4) : "-";
-                })()}{" "}
-                {BUY_FIAT}
+                {formatConversionRate()} {BUY_FIAT}
               </TableCell>
               <TableCell className="font-mono">
-                {(() => {
-                  const buyFiatPrice = selectedBuyRow?.price;
-                  const sellFiatPrice = selectedSellRow?.price;
-                  if (!buyFiatPrice || !sellFiatPrice) return "-";
-                  const convertedAmount =
-                    (1_000_000 / buyFiatPrice) * sellFiatPrice;
-                  return formatNum(convertedAmount);
-                })()}{" "}
-                {SELL_FIAT}
+                {formatLargeConversion()} {SELL_FIAT}
               </TableCell>
             </TableRow>
             {/* Selected available asset row */}
@@ -555,19 +563,7 @@ export default function TradingPage({ params }: Props) {
                   Max Available
                 </TableCell>
                 <TableCell className="font-mono" colSpan={2}>
-                  {(() => {
-                    const maxAsset = Math.min(
-                      selectedBuyRow.available,
-                      selectedSellRow.available
-                    );
-                    const buyFiatAmount = maxAsset * selectedBuyRow.price;
-                    const sellFiatAmount = maxAsset * selectedSellRow.price;
-                    return `${formatNum(
-                      maxAsset
-                    )} ${BASE_CURRENCY} = ${formatNum(
-                      buyFiatAmount
-                    )} ${BUY_FIAT} = ${formatNum(sellFiatAmount)} ${SELL_FIAT}`;
-                  })()}
+                  {formatMaxAvailable()}
                 </TableCell>
               </TableRow>
             )}
