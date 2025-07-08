@@ -73,6 +73,17 @@ export async function GET(
         key: ad.oid || ad.uid || ad.username || idx,
       };
     });
+
+    // Sort by price (ascending for buy, descending for sell)
+    mappedItems.sort((a: any, b: any) => {
+      const priceA = Number(a.price) || 0;
+      const priceB = Number(b.price) || 0;
+      
+      // For BUY side: sort by price ascending (cheapest first)
+      // For SELL side: sort by price descending (highest first)
+      return side === 'BUY' ? priceA - priceB : priceB - priceA;
+    });
+
     return NextResponse.json({
       data: mappedItems,
       fetched_at: new Date().toISOString(),

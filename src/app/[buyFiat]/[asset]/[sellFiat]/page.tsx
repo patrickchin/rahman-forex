@@ -149,7 +149,6 @@ export default function TradingPage({ params }: Props) {
     }
   );
 
-  // Auto-select first row for Buy and Sell when data loads and nothing is selected
   useEffect(() => {
     if (buyData && buyData.data && buyData.data.length > 0 && !selectedBuyRow) {
       setSelectedBuyRow(buyData.data[0]);
@@ -343,8 +342,7 @@ export default function TradingPage({ params }: Props) {
             ) : (
               buyData.data
                 .slice(0, buyRowCount)
-                .sort((a: any, b: any) => b.price - a.price)
-                .reverse()
+                .sort((a: any, b: any) => a.price - b.price)
                 .map((row: any) => (
                   <TableRow
                     key={row.key}
@@ -378,6 +376,7 @@ export default function TradingPage({ params }: Props) {
           </TableBody>
         </Table>
       </div>
+
       <div>
         <div className="flex items-center justify-between mb-2 gap-2">
           <div className="flex items-center gap-4">
@@ -512,7 +511,7 @@ export default function TradingPage({ params }: Props) {
           </TableBody>
         </Table>
       </div>
-      {/* Third Table: Conversion Rate */}
+
       <div>
         <h2 className="text-xl font-semibold mb-2">
           {buyFiat} → {sellFiat} Conversion Rate (via {baseCurrency})
