@@ -2,6 +2,7 @@ export const EXCHANGE_CONFIGS = {
   ALL: {
     name: "All",
     id: "all",
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     url: (asset: string, fiat: string, side: "buy" | "sell") => "#",
   },
   BYBIT: {

@@ -85,15 +85,15 @@ export default function TradingPage({ params }: Props) {
   }, [params]);
 
   // Get configuration from slug paths and search params (with fallbacks for loading state)
-  const BUY_FIAT = resolvedParams?.buyFiat.toUpperCase() || "NGN";
-  const BASE_CURRENCY = resolvedParams?.asset.toUpperCase() || "USDT";
-  const SELL_FIAT = resolvedParams?.sellFiat.toUpperCase() || "CNY";
-  const BUY_EXCHANGE_KEY = searchParams.get("buyex") || "BYBIT";
-  const SELL_EXCHANGE_KEY = searchParams.get("sellex") || "BYBIT";
+  const buyFiat = resolvedParams?.buyFiat.toUpperCase() || "NGN";
+  const baseCurrency = resolvedParams?.asset.toUpperCase() || "USDT";
+  const sellFiat = resolvedParams?.sellFiat.toUpperCase() || "CNY";
+  const buyExchangeKey = searchParams.get("buyex") || "BYBIT";
+  const sellExchangeKey = searchParams.get("sellex") || "BYBIT";
 
   // Minimum amount configuration from search params or defaults
-  const MIN_BUY_AMOUNT = searchParams.get("minbuy") || "0"; // Default 0
-  const MIN_SELL_AMOUNT = searchParams.get("minsell") || "0"; // Default 0
+  const minBuyAmount = searchParams.get("minbuy") || "0"; // Default 0
+  const minSellAmount = searchParams.get("minsell") || "0"; // Default 0
 
   // Function to handle exchange changes
   const handleExchangeChange = (exchangeType: "buyex" | "sellex") => {
@@ -105,11 +105,11 @@ export default function TradingPage({ params }: Props) {
   };
 
   // Get exchange configurations from search params
-  const BUY_EXCHANGE =
-    EXCHANGE_CONFIGS[BUY_EXCHANGE_KEY as keyof typeof EXCHANGE_CONFIGS] ||
+  const buyExchange =
+    EXCHANGE_CONFIGS[buyExchangeKey as keyof typeof EXCHANGE_CONFIGS] ||
     EXCHANGE_CONFIGS.BYBIT;
-  const SELL_EXCHANGE =
-    EXCHANGE_CONFIGS[SELL_EXCHANGE_KEY as keyof typeof EXCHANGE_CONFIGS] ||
+  const sellExchange =
+    EXCHANGE_CONFIGS[sellExchangeKey as keyof typeof EXCHANGE_CONFIGS] ||
     EXCHANGE_CONFIGS.BYBIT;
 
   const {
@@ -119,9 +119,9 @@ export default function TradingPage({ params }: Props) {
     error: errorBuy,
   } = useSWR(
     resolvedParams
-      ? `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${
-          BUY_EXCHANGE.id
-        }${MIN_BUY_AMOUNT && `?fiatAmount=${MIN_BUY_AMOUNT}`}`
+      ? `/api/p2p/search/buy/${baseCurrency.toLowerCase()}/${buyFiat.toLowerCase()}/${
+          buyExchange.id
+        }${minBuyAmount && `?fiatAmount=${minBuyAmount}`}`
       : null,
     fetcher,
     {
@@ -137,9 +137,9 @@ export default function TradingPage({ params }: Props) {
     error: errorSell,
   } = useSWR(
     resolvedParams
-      ? `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${
-          SELL_EXCHANGE.id
-        }${MIN_SELL_AMOUNT && `?fiatAmount=${MIN_SELL_AMOUNT}`}`
+      ? `/api/p2p/search/sell/${baseCurrency.toLowerCase()}/${sellFiat.toLowerCase()}/${
+          sellExchange.id
+        }${minSellAmount && `?fiatAmount=${minSellAmount}`}`
       : null,
     fetcher,
     {
@@ -215,9 +215,9 @@ export default function TradingPage({ params }: Props) {
     );
     const buyFiatAmount = maxAsset * selectedBuyRow.price;
     const sellFiatAmount = maxAsset * selectedSellRow.price;
-    return `${formatNum(maxAsset)} ${BASE_CURRENCY} = ${formatNum(
+    return `${formatNum(maxAsset)} ${baseCurrency} = ${formatNum(
       buyFiatAmount
-    )} ${BUY_FIAT} = ${formatNum(sellFiatAmount)} ${SELL_FIAT}`;
+    )} ${buyFiat} = ${formatNum(sellFiatAmount)} ${sellFiat}`;
   }
 
   return (
@@ -233,14 +233,12 @@ export default function TradingPage({ params }: Props) {
             loadingBuy || validatingBuy || loadingSell || validatingSell
           }
           onClick={async () => {
-            const buyUrl = `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${
-              BUY_EXCHANGE.id
-            }${MIN_BUY_AMOUNT !== "0" ? `?fiatAmount=${MIN_BUY_AMOUNT}` : ""}`;
-            const sellUrl = `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${
-              SELL_EXCHANGE.id
-            }${
-              MIN_SELL_AMOUNT !== "0" ? `?fiatAmount=${MIN_SELL_AMOUNT}` : ""
-            }`;
+            const buyUrl = `/api/p2p/search/buy/${baseCurrency.toLowerCase()}/${buyFiat.toLowerCase()}/${
+              buyExchange.id
+            }${minBuyAmount !== "0" ? `?fiatAmount=${minBuyAmount}` : ""}`;
+            const sellUrl = `/api/p2p/search/sell/${baseCurrency.toLowerCase()}/${sellFiat.toLowerCase()}/${
+              sellExchange.id
+            }${minSellAmount !== "0" ? `?fiatAmount=${minSellAmount}` : ""}`;
             await Promise.all([mutate(buyUrl), mutate(sellUrl)]);
           }}
         >
@@ -254,12 +252,11 @@ export default function TradingPage({ params }: Props) {
         <div className="flex items-center justify-between mb-2 gap-2">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
-              Buy {BASE_CURRENCY} - {BUY_EXCHANGE.name} {BASE_CURRENCY}/
-              {BUY_FIAT}
+              Buy {baseCurrency} - {buyExchange.name} {baseCurrency}/{buyFiat}
             </h2>
             <div className="flex items-center gap-2">
               <Select
-                value={BUY_EXCHANGE_KEY}
+                value={buyExchangeKey}
                 onValueChange={handleExchangeChange("buyex")}
               >
                 <SelectTrigger id="buyExchange" className="w-28">
@@ -275,15 +272,15 @@ export default function TradingPage({ params }: Props) {
               </Select>
             </div>{" "}
             <span className="text-sm font-normal">
-              (Min {numeral(MIN_BUY_AMOUNT).format("0,0")} {BUY_FIAT})
+              (Min {numeral(minBuyAmount).format("0,0")} {buyFiat})
             </span>
             <Link
-              href={BUY_EXCHANGE.url(BASE_CURRENCY, BUY_FIAT, "buy")}
+              href={buyExchange.url(baseCurrency, buyFiat, "buy")}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline text-sm font-normal"
             >
-              Open {BUY_EXCHANGE.name}
+              Open {buyExchange.name}
             </Link>
           </div>
         </div>
@@ -314,17 +311,13 @@ export default function TradingPage({ params }: Props) {
               <TableHead className="w-32">Exchange</TableHead>
               <TableHead className="w-96">Name</TableHead>
               <TableHead className="text-right w-36">Buy Price</TableHead>
+              <TableHead className="text-right w-36">Min ({buyFiat})</TableHead>
+              <TableHead className="text-right w-36">Max ({buyFiat})</TableHead>
               <TableHead className="text-right w-36">
-                Min ({BUY_FIAT})
+                Available ({baseCurrency})
               </TableHead>
               <TableHead className="text-right w-36">
-                Max ({BUY_FIAT})
-              </TableHead>
-              <TableHead className="text-right w-36">
-                Available ({BASE_CURRENCY})
-              </TableHead>
-              <TableHead className="text-right w-36">
-                Equivalent ({BUY_FIAT})
+                Equivalent ({buyFiat})
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -361,7 +354,7 @@ export default function TradingPage({ params }: Props) {
                     onClick={() => setSelectedBuyRow(row)}
                   >
                     <TableCell className="text-xs">
-                      {(row.exchange || BUY_EXCHANGE.name).toUpperCase()}
+                      {(row.exchange || buyExchange.name).toUpperCase()}
                     </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
@@ -389,12 +382,12 @@ export default function TradingPage({ params }: Props) {
         <div className="flex items-center justify-between mb-2 gap-2">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold flex items-center gap-2 m-0">
-              Sell {BASE_CURRENCY} - {SELL_EXCHANGE.name} {BASE_CURRENCY}/
-              {SELL_FIAT}
+              Sell {baseCurrency} - {sellExchange.name} {baseCurrency}/
+              {sellFiat}
             </h2>
             <div className="flex items-center gap-2">
               <Select
-                value={SELL_EXCHANGE_KEY}
+                value={sellExchangeKey}
                 onValueChange={handleExchangeChange("sellex")}
               >
                 <SelectTrigger id="sellExchange" className="w-28">
@@ -410,15 +403,15 @@ export default function TradingPage({ params }: Props) {
               </Select>
             </div>
             <span className="text-sm font-normal">
-              (Min {numeral(MIN_SELL_AMOUNT).format("0,0")} {SELL_FIAT})
+              (Min {numeral(minSellAmount).format("0,0")} {sellFiat})
             </span>
             <Link
-              href={SELL_EXCHANGE.url(BASE_CURRENCY, SELL_FIAT, "sell")}
+              href={sellExchange.url(baseCurrency, sellFiat, "sell")}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline text-sm font-normal"
             >
-              Open {SELL_EXCHANGE.name}
+              Open {sellExchange.name}
             </Link>
           </div>
         </div>
@@ -450,16 +443,16 @@ export default function TradingPage({ params }: Props) {
               <TableHead className="w-96">Name</TableHead>
               <TableHead className="text-right w-36">Sell Price</TableHead>
               <TableHead className="text-right w-36">
-                Min ({BASE_CURRENCY})
+                Min ({baseCurrency})
               </TableHead>
               <TableHead className="text-right w-36">
-                Max ({BASE_CURRENCY})
+                Max ({baseCurrency})
               </TableHead>
               <TableHead className="text-right w-36">
-                Available ({BASE_CURRENCY})
+                Available ({baseCurrency})
               </TableHead>
               <TableHead className="text-right w-36">
-                Equivalent ({SELL_FIAT})
+                Equivalent ({sellFiat})
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -495,7 +488,7 @@ export default function TradingPage({ params }: Props) {
                     onClick={() => setSelectedSellRow(row)}
                   >
                     <TableCell className="text-xs">
-                      {(row.exchange || SELL_EXCHANGE.name).toUpperCase()}
+                      {(row.exchange || sellExchange.name).toUpperCase()}
                     </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
@@ -522,22 +515,22 @@ export default function TradingPage({ params }: Props) {
       {/* Third Table: Conversion Rate */}
       <div>
         <h2 className="text-xl font-semibold mb-2">
-          {BUY_FIAT} → {SELL_FIAT} Conversion Rate (via {BASE_CURRENCY})
+          {buyFiat} → {sellFiat} Conversion Rate (via {baseCurrency})
         </h2>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>
-                Selected {BASE_CURRENCY}/{BUY_FIAT} Price
+                Selected {baseCurrency}/{buyFiat} Price
               </TableHead>
               <TableHead>
-                Selected {BASE_CURRENCY}/{SELL_FIAT} Price
+                Selected {baseCurrency}/{sellFiat} Price
               </TableHead>
               <TableHead>
-                1 {SELL_FIAT} ≈ ? {BUY_FIAT}
+                1 {sellFiat} ≈ ? {buyFiat}
               </TableHead>
               <TableHead>
-                1,000,000 {BUY_FIAT} ≈ ? {SELL_FIAT}
+                1,000,000 {buyFiat} ≈ ? {sellFiat}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -550,10 +543,10 @@ export default function TradingPage({ params }: Props) {
                 {(selectedSellRow && formatNum(selectedSellRow.price)) || "-"}
               </TableCell>
               <TableCell className="font-mono">
-                {formatConversionRate()} {BUY_FIAT}
+                {formatConversionRate()} {buyFiat}
               </TableCell>
               <TableCell className="font-mono">
-                {formatLargeConversion()} {SELL_FIAT}
+                {formatLargeConversion()} {sellFiat}
               </TableCell>
             </TableRow>
             {/* Selected available asset row */}
