@@ -197,10 +197,30 @@ export default function TradingPage({ params }: Props) {
 
   return (
     <main className="p-4 max-w-6xl mx-auto space-y-12">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <Link href="/" className="text-blue-600 hover:underline text-sm">
           ← Back to Home
         </Link>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={loadingBuy || validatingBuy || loadingSell || validatingSell}
+          onClick={async () => {
+            const buyUrl = `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${BUY_EXCHANGE.id}${
+              MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
+                ? `?fiatAmount=${MIN_BUY_AMOUNT}`
+                : ""
+            }`;
+            const sellUrl = `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${SELL_EXCHANGE.id}${
+              MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
+                ? `?fiatAmount=${MIN_SELL_AMOUNT}`
+                : ""
+            }`;
+            await Promise.all([mutate(buyUrl), mutate(sellUrl)]);
+          }}
+        >
+          {loadingBuy || validatingBuy || loadingSell || validatingSell ? "Refreshing..." : "Refresh All"}
+        </Button>
       </div>
 
       <div>
@@ -246,42 +266,21 @@ export default function TradingPage({ params }: Props) {
             <TableTimeInfo fetchedAt={buyData?.fetched_at} />
           </div>
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="buyRowCount"
-              className="text-sm font-medium self-center"
-            >
+            <label className="text-sm font-medium self-center">
               Rows:
             </label>
-            <Select
-              value={buyRowCount.toString()}
-              onValueChange={(val) => setBuyRowCount(Number(val))}
-            >
-              <SelectTrigger id="buyRowCount">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="3">3</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={loadingBuy || validatingBuy}
-              onClick={async () => {
-                const url = `/api/p2p/search/buy/${BASE_CURRENCY.toLowerCase()}/${BUY_FIAT.toLowerCase()}/${BUY_EXCHANGE.id}${
-                  MIN_BUY_AMOUNT && MIN_BUY_AMOUNT !== "0"
-                    ? `?fiatAmount=${MIN_BUY_AMOUNT}`
-                    : ""
-                }`;
-                await mutate(url);
-              }}
-            >
-              {loadingBuy || validatingBuy ? "Refreshing..." : "Refresh"}
-            </Button>
+            <div className="flex gap-1">
+              {[1, 3, 5, 10, 20].map((count) => (
+                <Button
+                  key={count}
+                  variant={buyRowCount === count ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setBuyRowCount(count)}
+                >
+                  {count}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
         <Table>
@@ -337,7 +336,7 @@ export default function TradingPage({ params }: Props) {
                     onClick={() => setSelectedBuyRow(row)}
                   >
                     <TableCell className="text-xs">
-                      {BUY_EXCHANGE.name.toUpperCase()}
+                      {row.exchange || BUY_EXCHANGE.name}
                     </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
@@ -386,7 +385,7 @@ export default function TradingPage({ params }: Props) {
               </Select>
             </div>
             <span className="text-sm font-normal">
-              (Min {numeral(MIN_SELL_AMOUNT).format("0,0")} {BASE_CURRENCY})
+              (Min {numeral(MIN_SELL_AMOUNT).format("0,0")} {SELL_FIAT})
             </span>
             <Link
               href={SELL_EXCHANGE.url(BASE_CURRENCY, SELL_FIAT, "sell")}
@@ -404,42 +403,21 @@ export default function TradingPage({ params }: Props) {
             <TableTimeInfo fetchedAt={sellData?.fetched_at} />
           </div>
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="sellRowCount"
-              className="text-sm font-medium self-center"
-            >
+            <label className="text-sm font-medium self-center">
               Rows:
             </label>
-            <Select
-              value={sellRowCount.toString()}
-              onValueChange={(val) => setSellRowCount(Number(val))}
-            >
-              <SelectTrigger id="sellRowCount">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="3">3</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={loadingSell || validatingSell}
-              onClick={async () => {
-                const url = `/api/p2p/search/sell/${BASE_CURRENCY.toLowerCase()}/${SELL_FIAT.toLowerCase()}/${SELL_EXCHANGE.id}${
-                  MIN_SELL_AMOUNT && MIN_SELL_AMOUNT !== "0"
-                    ? `?fiatAmount=${MIN_SELL_AMOUNT}`
-                    : ""
-                }`;
-                await mutate(url);
-              }}
-            >
-              {loadingSell || validatingSell ? "Refreshing..." : "Refresh"}
-            </Button>
+            <div className="flex gap-1">
+              {[1, 3, 5, 10, 20].map((count) => (
+                <Button
+                  key={count}
+                  variant={sellRowCount === count ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setSellRowCount(count)}
+                >
+                  {count}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
         <Table>
@@ -494,7 +472,7 @@ export default function TradingPage({ params }: Props) {
                     onClick={() => setSelectedSellRow(row)}
                   >
                     <TableCell className="text-xs">
-                      {SELL_EXCHANGE.name.toUpperCase()}
+                      {row.exchange || SELL_EXCHANGE.name}
                     </TableCell>
                     <TableCell>{row.name}</TableCell>
                     <TableCell className="text-right font-mono">
