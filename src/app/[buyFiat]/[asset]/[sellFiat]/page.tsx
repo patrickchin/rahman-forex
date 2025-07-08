@@ -228,7 +228,7 @@ export default function TradingPage({ params }: Props) {
               </Select>
             </div>{" "}
             <span className="text-sm font-normal">
-              (Min {MIN_BUY_AMOUNT} {BUY_FIAT})
+              (Min {numeral(MIN_BUY_AMOUNT).format("0,0")} {BUY_FIAT})
             </span>
             <Link
               href={BUY_EXCHANGE.url(BASE_CURRENCY, BUY_FIAT, "buy")}
@@ -386,7 +386,7 @@ export default function TradingPage({ params }: Props) {
               </Select>
             </div>
             <span className="text-sm font-normal">
-              (Min {MIN_SELL_AMOUNT} {BASE_CURRENCY})
+              (Min {numeral(MIN_SELL_AMOUNT).format("0,0")} {BASE_CURRENCY})
             </span>
             <Link
               href={SELL_EXCHANGE.url(BASE_CURRENCY, SELL_FIAT, "sell")}
