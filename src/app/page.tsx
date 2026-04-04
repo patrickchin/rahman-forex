@@ -13,6 +13,14 @@ export default function HomePage() {
               NGN → USDT → CNY (Bybit to OKX)
             </Link>
           </div>
+          <div>
+            <Link
+              href="/kes/usdt/cny?buyex=BYBIT&sellex=OKX&minbuy=1000000&minsell=10000"
+              className="text-blue-600 hover:underline text-lg"
+            >
+              KES → USDT → CNY (Bybit to OKX)
+            </Link>
+          </div>
         </div>
 
         <p className="text-sm text-gray-600 mt-8">
