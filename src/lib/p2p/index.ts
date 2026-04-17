@@ -4,6 +4,7 @@ import { bybitAdapter } from './bybit';
 import { okxAdapter } from './okx';
 import { gateAdapter } from './gate';
 import { htxAdapter } from './htx';
+import { kucoinAdapter } from './kucoin';
 
 export const exchangeAdapters: Record<string, ExchangeAdapter> = {
   binance: binanceAdapter,
@@ -11,6 +12,7 @@ export const exchangeAdapters: Record<string, ExchangeAdapter> = {
   okx: okxAdapter,
   gate: gateAdapter,
   htx: htxAdapter,
+  kucoin: kucoinAdapter,
 };
 
 export { parseSearchParams, sortOffers } from './types';

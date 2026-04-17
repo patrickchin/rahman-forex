@@ -35,4 +35,10 @@ export const EXCHANGE_CONFIGS = {
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
       `https://www.htx.com/en-us/fiat-crypto/trade/${side}-${asset.toLowerCase()}/`,
   },
+  KUCOIN: {
+    name: "KuCoin",
+    id: "kucoin",
+    url: (asset: string, fiat: string, side: "buy" | "sell") =>
+      `https://www.kucoin.com/otc/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
+  },
 } as const;
