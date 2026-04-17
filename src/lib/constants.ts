@@ -41,4 +41,10 @@ export const EXCHANGE_CONFIGS = {
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
       `https://www.kucoin.com/otc/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
   },
+  BITGET: {
+    name: "Bitget",
+    id: "bitget",
+    url: (asset: string, fiat: string, side: "buy" | "sell") =>
+      `https://www.bitget.com/p2p-trade/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
+  },
 } as const;
