@@ -140,18 +140,6 @@ KuCoin's P2P API requires the `x-site: global` header. The `side` parameter uses
 
 Bitget's public P2P endpoint is `/v1/p2p/pub/adv/queryAdvList` (POST). Requires `locale`, `language`, and `terminaltype` headers. Side convention: `1` = user buys crypto, `2` = user sells. The `price` field is fiat per crypto; `minAmount`/`maxAmount` are fiat order limits; `lastAmount` is remaining crypto available.
 
-### Exchanges Evaluated but Not Added
-
-The following exchanges were investigated (April 2026) but could not be integrated due to API access issues:
-
-| Exchange    | Issue                                                                                         |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| **Paxful**  | Server returns empty responses; likely discontinued or geo-restricted.                         |
-| **Noones**  | Behind Cloudflare challenge pages; not callable from server-side without browser emulation.    |
-| **MEXC**    | OTC API (`otc.mexc.com/api/v1/otc/ad/list`) returns 404. Endpoint removed or moved.           |
-
-These can be revisited if official API keys or alternative endpoints become available.
-
 ---
 
 ## Database Schema
