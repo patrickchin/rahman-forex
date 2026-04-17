@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import numeral from "numeral";
-import { bin, thresholdSturges, extent, min as d3Min, max as d3Max } from "d3-array";
+import { bin } from "d3-array";
 import {
   BarChart,
   Bar,
