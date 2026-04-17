@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rahman Forex is a real-time P2P cryptocurrency exchange rate comparison dashboard. It aggregates peer-to-peer trading offers from multiple crypto exchanges (Bybit, Binance, OKX, Gate.io) so users can identify the best conversion rates and arbitrage opportunities between fiat currencies via USDT.
+Rahman Forex is a real-time P2P cryptocurrency exchange rate comparison dashboard. It aggregates peer-to-peer trading offers from multiple crypto exchanges (Bybit, Binance, OKX, Gate.io, HTX) so users can identify the best conversion rates and arbitrage opportunities between fiat currencies via USDT.
 
 **Example use case:** Find the cheapest way to convert NGN → USDT → CNY by comparing buy/sell prices across all supported exchanges.
 
@@ -88,7 +88,7 @@ The main page renders a **dual-table layout**:
 - **Right Panel (SELL):** P2P offers where you sell crypto for the sell-side fiat — sorted highest first.
 
 **Features:**
-- Exchange selector dropdown (Bybit, Binance, OKX, Gate.io, or All)
+- Exchange selector dropdown (Bybit, Binance, OKX, Gate.io, HTX, or All)
 - Configurable row count (1, 3, 5, 10, 20)
 - Manual refresh with loading states
 - Row selection to pick the best offer
@@ -121,9 +121,28 @@ All API routes follow the pattern:
 | **Binance**| `p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search`  |
 | **OKX**    | `www.okx.com/v3/c2c/tradingOrders/books`                |
 | **Gate.io**| `www.gate.com/json_svr/query_push/`                     |
-| **All**    | Aggregates all four in parallel via `Promise.allSettled` |
+| **HTX**    | `www.htx.com/-/x/otc/v1/data/trade-market` (GET)       |
+| **All**    | Aggregates all five in parallel via `Promise.allSettled` |
 
 Each exchange handler normalizes the response into a unified format containing: price, min/max amounts, available quantity, and merchant info.
+
+### HTX Notes
+
+HTX (formerly Huobi) uses numeric IDs instead of currency/coin codes. The adapter maintains lookup tables mapping standard codes (e.g., `USDT` → `2`, `NGN` → `15`, `RUB` → `11`). If a requested fiat or asset has no known ID, the adapter returns an empty array instead of erroring.
+
+### Exchanges Evaluated but Not Added
+
+The following exchanges were investigated (April 2026) but could not be integrated due to API access issues:
+
+| Exchange    | Issue                                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| **KuCoin**  | P2P API (`kucoin.com/_api/otc/v3/advertisement/list`) returns 404. Endpoint removed or moved. |
+| **Paxful**  | Server returns empty responses; likely discontinued or geo-restricted.                         |
+| **Noones**  | Behind Cloudflare challenge pages; not callable from server-side without browser emulation.    |
+| **Bitget**  | Behind Cloudflare challenge pages; `v1/p2p/pub/advList` and `v2` both blocked.                |
+| **MEXC**    | OTC API (`otc.mexc.com/api/v1/otc/ad/list`) returns 404. Endpoint removed or moved.           |
+
+These can be revisited if official API keys or alternative endpoints become available.
 
 ---
 
