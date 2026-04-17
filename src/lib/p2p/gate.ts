@@ -43,7 +43,7 @@ export const gateAdapter: ExchangeAdapter = {
     const data = await response.json();
     const items = data?.push_order || [];
     return items.map((ad: Record<string, unknown>, idx: number) => {
-      const limit = String(ad.limit_total || ad.limit_fiat || '');
+      const limit = String(ad.limit_fiat || ad.limit_total || '');
       const [min, max] = limit.includes('~')
         ? limit.split('~').map((v: string) => v.trim())
         : ['', ''];
