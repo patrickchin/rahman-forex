@@ -29,4 +29,10 @@ export const EXCHANGE_CONFIGS = {
     url: (asset: string, fiat: string, side: "buy" | "sell") =>
       `https://www.gate.com/p2p/${side}/${asset.toUpperCase()}-${fiat.toUpperCase()}`,
   },
+  HTX: {
+    name: "HTX",
+    id: "htx",
+    url: (asset: string, fiat: string, side: "buy" | "sell") =>
+      `https://www.htx.com/en-us/fiat-crypto/trade/${side}-${asset.toLowerCase()}/`,
+  },
 } as const;
