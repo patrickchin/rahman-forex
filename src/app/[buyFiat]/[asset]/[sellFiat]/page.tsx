@@ -22,6 +22,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { EXCHANGE_CONFIGS } from "@/lib/constants";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { PriceHistogram } from "@/components/PriceHistogram";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -78,6 +79,8 @@ export default function TradingPage({ params }: Props) {
   const [selectedSellRow, setSelectedSellRow] = useState<any | null>(null);
   const [buyRowCount, setBuyRowCount] = useState(5);
   const [sellRowCount, setSellRowCount] = useState(5);
+  const [showBuyHistogram, setShowBuyHistogram] = useState(true);
+  const [showSellHistogram, setShowSellHistogram] = useState(true);
 
   // Resolve params on component mount
   useEffect(() => {
@@ -375,6 +378,25 @@ export default function TradingPage({ params }: Props) {
             )}
           </TableBody>
         </Table>
+        {buyData?.data?.length > 0 && (
+          <div className="mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => setShowBuyHistogram((v) => !v)}
+            >
+              {showBuyHistogram ? "Hide" : "Show"} Histogram
+            </Button>
+            {showBuyHistogram && (
+              <PriceHistogram
+                data={buyData.data}
+                fiatLabel={buyFiat}
+                side="buy"
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <div>
@@ -510,6 +532,25 @@ export default function TradingPage({ params }: Props) {
             )}
           </TableBody>
         </Table>
+        {sellData?.data?.length > 0 && (
+          <div className="mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => setShowSellHistogram((v) => !v)}
+            >
+              {showSellHistogram ? "Hide" : "Show"} Histogram
+            </Button>
+            {showSellHistogram && (
+              <PriceHistogram
+                data={sellData.data}
+                fiatLabel={sellFiat}
+                side="sell"
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <div>
