@@ -7,7 +7,7 @@ export default function HomePage() {
         <div className="space-y-4">
           <div>
             <Link
-              href="/ngn/usdt/cny?buyex=BYBIT&sellex=OKX&minbuy=1000000&minsell=10000"
+              href="/ngn/usdt/cny?buyex=BYBIT&sellex=OKX&minbuy=1500000&minsell=7000"
               className="text-blue-600 hover:underline text-lg"
             >
               NGN → USDT → CNY (Bybit to OKX)
@@ -15,7 +15,7 @@ export default function HomePage() {
           </div>
           <div>
             <Link
-              href="/kes/usdt/cny?buyex=BYBIT&sellex=OKX&minbuy=1000000&minsell=10000"
+              href="/kes/usdt/cny?buyex=BYBIT&sellex=OKX&minbuy=130000&minsell=7000"
               className="text-blue-600 hover:underline text-lg"
             >
               KES → USDT → CNY (Bybit to OKX)
