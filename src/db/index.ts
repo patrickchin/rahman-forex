@@ -1,7 +1,13 @@
 import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { p2pAdvertOrderHistory } from '@/db/schema';
+import { p2pAdvertOrderHistory, priceSnapshots } from '@/db/schema';
 
-const db = drizzle(process.env.DATABASE_URL!);
+const databaseUrl = process.env.DATABASE_URL;
 
-export { db, p2pAdvertOrderHistory };
+if (!databaseUrl) {
+	throw new Error('DATABASE_URL environment variable is required');
+}
+
+const db = drizzle(databaseUrl);
+
+export { db, p2pAdvertOrderHistory, priceSnapshots };

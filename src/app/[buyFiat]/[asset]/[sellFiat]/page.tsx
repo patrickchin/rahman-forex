@@ -23,6 +23,7 @@ import { formatDistanceToNow } from "date-fns";
 import { EXCHANGE_CONFIGS } from "@/lib/constants";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PriceHistogram } from "@/components/PriceHistogram";
+import { PriceChart } from "@/components/PriceChart";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -397,6 +398,14 @@ export default function TradingPage({ params }: Props) {
             )}
           </div>
         )}
+        <div className="mt-4">
+          <PriceChart
+            asset={baseCurrency}
+            fiat={buyFiat}
+            side="BUY"
+            label={`Buy ${baseCurrency}/${buyFiat}`}
+          />
+        </div>
       </div>
 
       <div>
@@ -551,6 +560,14 @@ export default function TradingPage({ params }: Props) {
             )}
           </div>
         )}
+        <div className="mt-4">
+          <PriceChart
+            asset={baseCurrency}
+            fiat={sellFiat}
+            side="SELL"
+            label={`Sell ${baseCurrency}/${sellFiat}`}
+          />
+        </div>
       </div>
 
       <div>
