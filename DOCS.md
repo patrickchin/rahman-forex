@@ -166,6 +166,7 @@ Single table — `p2pAdvertOrderHistory`:
 | `REDIS_URL`            | Dev only | Local Redis URL                       |
 | `UPSTASH_REDIS_URL`    | Prod     | Upstash Redis REST URL                |
 | `UPSTASH_REDIS_TOKEN`  | Prod     | Upstash Redis auth token              |
+| `CRON_SECRET`          | Prod     | Bearer token required for Vercel cron |
 
 ---
 
@@ -198,4 +199,44 @@ The app runs at `http://localhost:3000`. Adminer (database GUI) is available at 
 
 ## Deployment
 
-The project is configured for **Vercel** deployment. Set the production environment variables (`DATABASE_URL`, `UPSTASH_REDIS_URL`, `UPSTASH_REDIS_TOKEN`) in your Vercel project settings.
+The backend is designed to run on **Vercel** with a managed PostgreSQL database and Upstash Redis.
+
+### Production Checklist
+
+1. Create a managed PostgreSQL database that accepts connections from Vercel.
+2. Prefer the provider's pooled/transaction connection string for serverless workloads.
+3. In Vercel project settings, add:
+    - `DATABASE_URL`
+    - `UPSTASH_REDIS_URL`
+    - `UPSTASH_REDIS_TOKEN`
+    - `CRON_SECRET`
+4. Apply the production schema before the first deployment:
+
+```bash
+npm install
+npm run db:push
+```
+
+5. Deploy to Vercel.
+6. Verify the cron job exists in [vercel.json](vercel.json) and that `/api/cron/collect-prices` returns `401` without the bearer token in production.
+
+### Recommended Rollout Flow
+
+```bash
+npm install
+npm run test
+npm run build
+npm run db:push
+```
+
+After the schema is applied, trigger a deployment and verify:
+
+- `GET /api/p2p/search/buy/USDT/NGN/all` returns aggregated offers.
+- `GET /api/p2p/history/USDT/NGN?side=BUY&period=24h` returns data after the cron job has run.
+- Vercel Cron invokes `/api/cron/collect-prices` once per day.
+
+### Notes
+
+- The database-backed routes use the Node.js runtime explicitly because `pg` is not supported on the Edge runtime.
+- `CRON_SECRET` must be configured in Vercel so cron requests carry the expected `Authorization: Bearer ...` header.
+- Use [.env.example](.env.example) as the baseline variable set for local and production environments.

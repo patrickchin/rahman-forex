@@ -65,4 +65,14 @@ describe('history route', () => {
     expect(data.data).toEqual([]);
     expect(data.warning).toContain('price_snapshots table');
   });
+
+  it('returns 400 for an invalid side', async () => {
+    const request = new Request('http://localhost:3000/api/p2p/history/usdt/ngn?side=HOLD&period=24h');
+    const response = await GET(request, { params: Promise.resolve({ asset: 'usdt', fiat: 'ngn' }) });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toContain('Invalid side');
+    expect(selectMock).not.toHaveBeenCalled();
+  });
 });

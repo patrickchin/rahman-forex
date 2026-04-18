@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { db, priceSnapshots } from '@/db';
 import { exchangeAdapters } from '@/lib/p2p';
@@ -5,15 +6,36 @@ import type { P2PSearchParams } from '@/lib/p2p';
 import { TRACKED_PAIRS } from '@/lib/tracked-pairs';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 export const maxDuration = 60;
+
+function safeCompare(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(leftBuffer, rightBuffer);
+}
 
 function isAuthorizedCronRequest(req: Request): boolean {
   if (process.env.NODE_ENV === 'development') {
     return true;
   }
 
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return false;
+  }
+
   const authHeader = req.headers.get('authorization');
-  return authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  if (!authHeader) {
+    return false;
+  }
+
+  return safeCompare(authHeader, `Bearer ${cronSecret}`);
 }
 
 export async function GET(req: Request) {
@@ -90,7 +112,25 @@ export async function GET(req: Request) {
 
   // Batch insert all rows
   if (rows.length > 0) {
-    await db.insert(priceSnapshots).values(rows);
+    try {
+      await db.insert(priceSnapshots).values(rows);
+    } catch (error) {
+      errors.push({
+        exchange: 'database',
+        pair: 'batch-insert',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      return NextResponse.json(
+        {
+          ok: false,
+          recorded_at: now.toISOString(),
+          snapshots_inserted: 0,
+          errors,
+        },
+        { status: 500 },
+      );
+    }
   }
 
   return NextResponse.json({

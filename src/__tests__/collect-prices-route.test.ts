@@ -73,6 +73,24 @@ describe('collect-prices route', () => {
     expect(insertMock).not.toHaveBeenCalled();
   });
 
+  it('rejects production requests when CRON_SECRET is missing', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.CRON_SECRET;
+
+    const response = await GET(
+      new Request('http://localhost:3000/api/cron/collect-prices', {
+        headers: {
+          authorization: 'Bearer undefined',
+        },
+      }),
+    );
+    const data = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(data.error).toBe('Unauthorized');
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
   it('allows development requests and stores snapshots', async () => {
     process.env.NODE_ENV = 'development';
 
@@ -84,5 +102,26 @@ describe('collect-prices route', () => {
     expect(data.snapshots_inserted).toBe(1);
     expect(insertMock).toHaveBeenCalledTimes(1);
     expect(valuesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 500 when the database insert fails', async () => {
+    process.env.NODE_ENV = 'development';
+    valuesMock.mockRejectedValueOnce(new Error('insert failed'));
+
+    const response = await GET(new Request('http://localhost:3000/api/cron/collect-prices'));
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.ok).toBe(false);
+    expect(data.snapshots_inserted).toBe(0);
+    expect(data.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          exchange: 'database',
+          pair: 'batch-insert',
+          error: 'insert failed',
+        }),
+      ]),
+    );
   });
 });

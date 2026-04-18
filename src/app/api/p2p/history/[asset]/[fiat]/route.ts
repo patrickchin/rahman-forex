@@ -3,6 +3,7 @@ import { db, priceSnapshots } from '@/db';
 import { and, eq, gte, desc } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 type DatabaseError = {
   code?: string;
@@ -37,6 +38,13 @@ export async function GET(
   const side = searchParams.get('side')?.toUpperCase() || 'BUY';
   const exchange = searchParams.get('exchange')?.toLowerCase() || null;
   const period = searchParams.get('period') || '24h';
+
+  if (side !== 'BUY' && side !== 'SELL') {
+    return NextResponse.json(
+      { error: 'Invalid side. Valid: BUY, SELL' },
+      { status: 400 },
+    );
+  }
 
   const periodMs = PERIOD_MS[period];
   if (!periodMs) {
